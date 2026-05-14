@@ -211,3 +211,40 @@ describe('simulate — investments payout', () => {
     expect(finalDay.assetsRub.rubBank).toBeLessThan(125_000);
   });
 });
+
+describe('simulate — edge cases', () => {
+  it('voyage in the past returns empty days and current total', () => {
+    const inputs: Inputs = {
+      returnDate: '2026-01-01',
+      voyageDate: '2026-04-01',
+      salaryLumpSumUsd: 0,
+      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      rubPerUsd: 90,
+      monthlyFamilyRub: 0,
+      goals: [],
+      investments: [],
+    };
+    const result = simulate(inputs, new Date('2026-05-01'));
+    expect(result.days).toHaveLength(0);
+    expect(result.balanceAtVoyage).toBe(100_000);
+    expect(result.runsOutOn).toBeNull();
+  });
+
+  it('ignores goal outside leave window', () => {
+    const inputs: Inputs = {
+      returnDate: '2026-05-01',
+      voyageDate: '2026-05-10',
+      salaryLumpSumUsd: 0,
+      assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
+      rubPerUsd: 90,
+      monthlyFamilyRub: 0,
+      goals: [{
+        id: 'g1', name: 'Way later', amountRub: 999_000,
+        mode: 'lump', date: '2027-01-01', enabled: true,
+      }],
+      investments: [],
+    };
+    const result = simulate(inputs, new Date('2026-05-01'));
+    expect(result.balanceAtVoyage).toBe(1_000_000);
+  });
+});
