@@ -163,3 +163,26 @@ describe('simulate — drain order', () => {
     expect(after.assetsRub.usdCash).toBeCloseTo(70, 4);
   });
 });
+
+describe('simulate — investments reinvest', () => {
+  it('compounds investment principal daily when reinvest=true', () => {
+    const inputs: Inputs = {
+      returnDate: '2026-05-01',
+      voyageDate: '2027-05-01',  // ~365 days
+      salaryLumpSumUsd: 0,
+      assets: { usdBank: 0, usdCash: 0, rubBank: 0 },
+      rubPerUsd: 90,
+      monthlyFamilyRub: 0,
+      goals: [],
+      investments: [{
+        id: 'i1', kind: 'ofz', name: 'OFZ',
+        amountRub: 1_000_000, annualRatePct: 12, reinvest: true,
+      }],
+    };
+    const result = simulate(inputs, new Date('2026-05-01'));
+    // After 365 daily compounding cycles at annual 12%: final ≈ 1,000,000 * 1.12 = 1,120,000
+    expect(result.balanceAtVoyage).toBeGreaterThan(1_115_000);
+    expect(result.balanceAtVoyage).toBeLessThan(1_125_000);
+    expect(result.totalInvestmentYieldRub).toBeGreaterThan(115_000);
+  });
+});
