@@ -13,6 +13,25 @@ const emptyInputs = (): Inputs => ({
   investments: [],
 });
 
+describe('simulate — monthly expenses', () => {
+  it('drains rubBank by daily prorated amount', () => {
+    const inputs: Inputs = {
+      returnDate: '2026-05-01',
+      voyageDate: '2026-05-31',
+      salaryLumpSumUsd: 0,
+      assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
+      rubPerUsd: 90,
+      monthlyFamilyRub: 30_000,
+      goals: [],
+      investments: [],
+    };
+    const result = simulate(inputs, new Date('2026-05-01'));
+    // 31 days * (30000 / 30.4375) ≈ 30,554
+    expect(result.totalSpentRub).toBeCloseTo(30_554, -1);
+    expect(result.balanceAtVoyage).toBeCloseTo(1_000_000 - 30_554, -1);
+  });
+});
+
 describe('simulate — baseline', () => {
   it('returns days[] from today to voyageDate inclusive', () => {
     const today = new Date('2026-05-01');
