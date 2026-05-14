@@ -114,3 +114,52 @@ describe('simulate — spread goals', () => {
     expect(result.balanceAtVoyage).toBeCloseTo(900_000, 0);
   });
 });
+
+describe('simulate — drain order', () => {
+  it('drains RUB bank first, then USD bank, then USD cash', () => {
+    const inputs: Inputs = {
+      returnDate: '2026-05-01',
+      voyageDate: '2026-05-04',
+      salaryLumpSumUsd: 0,
+      assets: { usdBank: 100, usdCash: 200, rubBank: 500 },
+      rubPerUsd: 100,
+      monthlyFamilyRub: 0,
+      goals: [{
+        id: 'g1', name: 'Big buy', amountRub: 10_000,
+        mode: 'lump', date: '2026-05-03', enabled: true,
+      }],
+      investments: [],
+    };
+    const result = simulate(inputs, new Date('2026-05-01'));
+    const after = result.days.find(d => d.date === '2026-05-03')!;
+    // 500 RUB drained first, then 9500/100 = 95 USD from usdBank, leaving 5 USD bank
+    // and 200 cash untouched (since we still had USD bank)
+    // wait: 500 RUB + 100 USD bank * 100 rate = 500 + 10000 = 10500 RUB capacity from bank alone
+    // After 500 RUB and 95 USD bank drained: rubBank=0, usdBank=5, usdCash=200
+    expect(after.assetsRub.rubBank).toBeCloseTo(0, 4);
+    expect(after.assetsRub.usdBank).toBeCloseTo(5, 4);
+    expect(after.assetsRub.usdCash).toBeCloseTo(200, 4);
+  });
+
+  it('cascades to USD cash when USD bank runs out', () => {
+    const inputs: Inputs = {
+      returnDate: '2026-05-01',
+      voyageDate: '2026-05-04',
+      salaryLumpSumUsd: 0,
+      assets: { usdBank: 50, usdCash: 100, rubBank: 100 },
+      rubPerUsd: 100,
+      monthlyFamilyRub: 0,
+      goals: [{
+        id: 'g1', name: 'Spend',
+        amountRub: 100 + 50 * 100 + 30 * 100, // 100 RUB + all USD bank + 30 USD cash worth
+        mode: 'lump', date: '2026-05-02', enabled: true,
+      }],
+      investments: [],
+    };
+    const result = simulate(inputs, new Date('2026-05-01'));
+    const after = result.days.find(d => d.date === '2026-05-02')!;
+    expect(after.assetsRub.rubBank).toBeCloseTo(0, 4);
+    expect(after.assetsRub.usdBank).toBeCloseTo(0, 4);
+    expect(after.assetsRub.usdCash).toBeCloseTo(70, 4);
+  });
+});
