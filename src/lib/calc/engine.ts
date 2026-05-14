@@ -1,4 +1,4 @@
-import type { Inputs, SimulationResult, DayPoint, AssetMix } from './types';
+import type { Inputs, SimulationResult, DayPoint, AssetMix, GoalEvent } from './types';
 
 const MS_PER_DAY = 86_400_000;
 const DAYS_PER_MONTH = 30.4375;
@@ -60,6 +60,8 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
   const days: DayPoint[] = [];
   for (let i = 0; i < totalDays; i++) {
     const d = new Date(start.getTime() + i * MS_PER_DAY);
+    const todayISO = toISO(d);
+    const todaysEvents: GoalEvent[] = [];
 
     // Apply daily expense
     if (dailyExpense > 0) {
@@ -67,12 +69,22 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
       totalSpent += dailyExpense;
     }
 
+    // Apply lump goals due today
+    for (const g of inputs.goals) {
+      if (!g.enabled) continue;
+      if (g.mode === 'lump' && g.date === todayISO) {
+        drain(assets, g.amountRub, inputs.rubPerUsd);
+        totalSpent += g.amountRub;
+        todaysEvents.push({ goalId: g.id, name: g.name, amountRub: g.amountRub });
+      }
+    }
+
     const t = totalRub(assets, inputs.rubPerUsd, investmentTotal);
     days.push({
-      date: toISO(d),
+      date: todayISO,
       totalRub: t,
       assetsRub: { ...assets },
-      events: [],
+      events: todaysEvents,
       investmentValueRub: investmentTotal,
     });
   }

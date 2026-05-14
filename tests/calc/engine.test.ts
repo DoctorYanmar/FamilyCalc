@@ -32,6 +32,49 @@ describe('simulate — monthly expenses', () => {
   });
 });
 
+describe('simulate — lump goals', () => {
+  it('subtracts the goal amount on the exact date and records the event', () => {
+    const inputs: Inputs = {
+      returnDate: '2026-05-01',
+      voyageDate: '2026-05-10',
+      salaryLumpSumUsd: 0,
+      assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
+      rubPerUsd: 90,
+      monthlyFamilyRub: 0,
+      goals: [{
+        id: 'g1', name: 'Car', amountRub: 500_000,
+        mode: 'lump', date: '2026-05-05', enabled: true,
+      }],
+      investments: [],
+    };
+    const result = simulate(inputs, new Date('2026-05-01'));
+    const dayBefore = result.days.find(d => d.date === '2026-05-04')!;
+    const dayOf = result.days.find(d => d.date === '2026-05-05')!;
+    expect(dayBefore.totalRub).toBe(1_000_000);
+    expect(dayOf.totalRub).toBe(500_000);
+    expect(dayOf.events).toHaveLength(1);
+    expect(dayOf.events[0].amountRub).toBe(500_000);
+  });
+
+  it('ignores disabled lump goal', () => {
+    const inputs: Inputs = {
+      returnDate: '2026-05-01',
+      voyageDate: '2026-05-10',
+      salaryLumpSumUsd: 0,
+      assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
+      rubPerUsd: 90,
+      monthlyFamilyRub: 0,
+      goals: [{
+        id: 'g1', name: 'Car', amountRub: 500_000,
+        mode: 'lump', date: '2026-05-05', enabled: false,
+      }],
+      investments: [],
+    };
+    const result = simulate(inputs, new Date('2026-05-01'));
+    expect(result.balanceAtVoyage).toBe(1_000_000);
+  });
+});
+
 describe('simulate — baseline', () => {
   it('returns days[] from today to voyageDate inclusive', () => {
     const today = new Date('2026-05-01');
