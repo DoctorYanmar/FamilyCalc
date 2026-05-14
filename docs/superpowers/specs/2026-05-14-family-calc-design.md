@@ -138,10 +138,9 @@ type Investment = {
   id: ID;
   kind: InstrumentKind;
   name: string;
-  amountRub: number;
+  amountRub: number;        // principal allocated to this instrument
   annualRatePct: number;
   reinvest: boolean;
-  source: "newAllocation" | "existing";
 };
 
 type Inputs = {
@@ -306,7 +305,7 @@ FamilyCalc   [Scenario ▾]  [+]  [⤓]  [⤒]  RU/EN  ☀/🌙  🖨
 2. **Current assets** — USD bank, USD cash, RUB bank (subtitle shows total in RUB-equivalent)
 3. **Family expenses** — monthly RUB (subtitle shows total over leave period)
 4. **Goals** — inline list, `+ Add goal` button. Each row: name, amount, mode dropdown, date(s), enabled toggle, delete
-5. **Investments** — inline list, `+ Add investment` button. Each row: name, kind dropdown, amount, annual %, reinvest toggle, delete. Help icon on `kind` explains each instrument
+5. **Investments** — inline list, `+ Add investment` button. Each row: name, kind dropdown, amount, annual %, reinvest toggle, delete. Help icon on `kind` explains each instrument. Note: investment amounts and `assets.rubBank` are independent — the user sets each manually. To simulate "moving 500k from rubBank to OFZ" the user decreases rubBank by 500k and adds an investment for 500k. This keeps the model unambiguous and the UI simple.
 6. **Monthly breakdown** — collapsed by default; opens to show table of month / opening / spent / goals / closing
 
 ### Visual style: Slate & mint (dark default)
