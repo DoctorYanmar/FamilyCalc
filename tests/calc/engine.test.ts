@@ -186,3 +186,28 @@ describe('simulate — investments reinvest', () => {
     expect(result.totalInvestmentYieldRub).toBeGreaterThan(115_000);
   });
 });
+
+describe('simulate — investments payout', () => {
+  it('with reinvest=false credits interest to rubBank, principal unchanged', () => {
+    const inputs: Inputs = {
+      returnDate: '2026-05-01',
+      voyageDate: '2027-05-01',
+      salaryLumpSumUsd: 0,
+      assets: { usdBank: 0, usdCash: 0, rubBank: 0 },
+      rubPerUsd: 90,
+      monthlyFamilyRub: 0,
+      goals: [],
+      investments: [{
+        id: 'i1', kind: 'vkladRub', name: 'Vklad',
+        amountRub: 1_000_000, annualRatePct: 12, reinvest: false,
+      }],
+    };
+    const result = simulate(inputs, new Date('2026-05-01'));
+    // Principal stays 1,000,000; ~117k yield accumulates in rubBank (daily simple-payout
+    // accumulates slightly less than compounding ≈ 117k vs ~120k)
+    const finalDay = result.days[result.days.length - 1];
+    expect(finalDay.investmentValueRub).toBeCloseTo(1_000_000, 0);
+    expect(finalDay.assetsRub.rubBank).toBeGreaterThan(110_000);
+    expect(finalDay.assetsRub.rubBank).toBeLessThan(125_000);
+  });
+});
