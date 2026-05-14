@@ -92,3 +92,25 @@ describe('simulate — baseline', () => {
     expect(result.totalSpentRub).toBe(0);
   });
 });
+
+describe('simulate — spread goals', () => {
+  it('spreads amount evenly across the range, total within 1 RUB', () => {
+    const inputs: Inputs = {
+      returnDate: '2026-05-01',
+      voyageDate: '2026-05-10',
+      salaryLumpSumUsd: 0,
+      assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
+      rubPerUsd: 90,
+      monthlyFamilyRub: 0,
+      goals: [{
+        id: 'g1', name: 'Repairs', amountRub: 100_000,
+        mode: 'spread', date: '2026-05-03', endDate: '2026-05-07',
+        enabled: true,
+      }],
+      investments: [],
+    };
+    const result = simulate(inputs, new Date('2026-05-01'));
+    expect(result.totalSpentRub).toBeCloseTo(100_000, 0);
+    expect(result.balanceAtVoyage).toBeCloseTo(900_000, 0);
+  });
+});

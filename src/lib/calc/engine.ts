@@ -79,6 +79,22 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
       }
     }
 
+    // Apply spread goals active today
+    for (const g of inputs.goals) {
+      if (!g.enabled || g.mode !== 'spread') continue;
+      const startD = g.date;
+      const endD = g.endDate ?? g.date;
+      if (endD < startD) continue;       // invalid range, skip
+      if (todayISO < startD || todayISO > endD) continue;
+      const rangeDays = Math.floor(
+        (fromISO(endD).getTime() - fromISO(startD).getTime()) / MS_PER_DAY
+      ) + 1;
+      const perDay = g.amountRub / rangeDays;
+      drain(assets, perDay, inputs.rubPerUsd);
+      totalSpent += perDay;
+      todaysEvents.push({ goalId: g.id, name: g.name, amountRub: perDay });
+    }
+
     const t = totalRub(assets, inputs.rubPerUsd, investmentTotal);
     days.push({
       date: todayISO,
