@@ -6,9 +6,13 @@
 
 **Architecture:** Pure-static SPA in Svelte 5 (runes) + Vite + TypeScript. Calc engine is a pure function with vitest unit tests. State held in Svelte runes, persisted to localStorage with JSON export/import. UI is mobile-first stacked sections with sticky results bar. PDF via `@media print` stylesheet (browser-native, no library). Deploy to GitHub Pages via `gh-pages` npm package — no GitHub Actions consumed.
 
-**Tech Stack:** Svelte 5, Vite, TypeScript, svelte-i18n, Chart.js (via svelte-chartjs), vitest, gh-pages. No CSS framework (handwritten CSS with custom properties).
+**Visual direction:** Terminal / Brutalist — monospace-only typography (`JetBrains Mono`), phosphor-amber accent on near-black, ASCII frames, animated scanline atmosphere, tweened number count-ups, blinking cursor on KPI. See `docs/superpowers/specs/2026-05-14-family-calc-design-system.md`.
 
-**Reference:** Full design at `docs/superpowers/specs/2026-05-14-family-calc-design.md`.
+**Tech Stack:** Svelte 5, Vite, TypeScript, svelte-i18n, Chart.js, vitest, gh-pages. JetBrains Mono from Google Fonts. No CSS framework (handwritten CSS with custom properties).
+
+**References:**
+- Functional design: `docs/superpowers/specs/2026-05-14-family-calc-design.md`
+- Visual design system: `docs/superpowers/specs/2026-05-14-family-calc-design-system.md`
 
 ---
 
@@ -1927,41 +1931,142 @@ git commit -m "feat: format helpers for currency and date"
 
 ---
 
-# Phase 4 — Styles & theming
+# Phase 4 — Styles, motion, atmosphere (Terminal / Brutalist design system)
 
-## Task 21: global.css with theme tokens
+## Task 21: tokens.css — design tokens
+
+**Files:**
+- Create: `src/styles/tokens.css`
+
+- [ ] **Step 1: Write tokens**
+
+Create `src/styles/tokens.css`:
+
+```css
+:root {
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Type scale */
+  --t-micro: 9px;
+  --t-mini:  10px;
+  --t-small: 11px;
+  --t-base:  12px;
+  --t-med:   14px;
+  --t-lg:    18px;
+  --t-xl:    24px;
+  --t-2xl:   34px;
+  --t-3xl:   52px;
+
+  /* Spacing scale (4px base) */
+  --gap-px:  1px;
+  --gap-1:   4px;
+  --gap-2:   8px;
+  --gap-3:   12px;
+  --gap-4:   16px;
+  --gap-5:   20px;
+  --gap-6:   24px;
+  --gap-8:   32px;
+  --gap-10:  40px;
+  --gap-12:  48px;
+}
+
+:root[data-theme='dark'] {
+  --bg:         #060606;
+  --surface-1:  #0a0a0a;
+  --surface-2:  #0f0f0f;
+  --surface-3:  #141414;
+  --border:     #1f1f1f;
+  --border-2:   #2a2a2a;
+  --border-3:   #404040;
+  --fg:         #e4e4e4;
+  --fg-dim:     #b4b4b4;
+  --muted:      #707070;
+  --label:      #525252;
+  --amber:      #ffb454;
+  --amber-soft: rgba(255, 180, 84, 0.12);
+  --amber-deep: #b87f30;
+  --ok:         #7dd3a0;
+  --warn:       #f5d77a;
+  --danger:     #ec8989;
+  --info:       #7ba8f5;
+}
+
+:root[data-theme='light'] {
+  /* Paper-terminal — used for light toggle AND for PDF print */
+  --bg:         #f5f1e8;
+  --surface-1:  #f0ebde;
+  --surface-2:  #ebe5d4;
+  --surface-3:  #e3dcc8;
+  --border:     #c8bfa8;
+  --border-2:   #a89e85;
+  --border-3:   #6e6655;
+  --fg:         #1a1815;
+  --fg-dim:     #4a4538;
+  --muted:      #6e6655;
+  --label:      #8a8270;
+  --amber:      #b8651d;
+  --amber-soft: rgba(184, 101, 29, 0.10);
+  --amber-deep: #8a4810;
+  --ok:         #2f7a4d;
+  --warn:       #a07a1d;
+  --danger:     #b53232;
+  --info:       #2e5fa5;
+}
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add src/styles/tokens.css
+git commit -m "feat(style): design tokens — terminal aesthetic with paper-light theme"
+```
+
+---
+
+## Task 21B: fonts — load JetBrains Mono
+
+**Files:**
+- Modify: `index.html`
+
+- [ ] **Step 1: Add Google Fonts preconnect and link**
+
+In `index.html`, inside `<head>` and BEFORE the existing `<title>` tag, add:
+
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+```
+
+- [ ] **Step 2: Verify in browser**
+
+```bash
+npm run dev
+```
+
+Open http://localhost:5173/, open DevTools → Network → Fonts. Confirm `JetBrains+Mono` font files load with HTTP 200.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add index.html
+git commit -m "feat(style): load JetBrains Mono from Google Fonts"
+```
+
+---
+
+## Task 21C: global.css — base styles and component primitives
 
 **Files:**
 - Create: `src/styles/global.css`
+- Modify: `src/app.css`
 
 - [ ] **Step 1: Write the stylesheet**
 
 Create `src/styles/global.css`:
 
 ```css
-:root[data-theme='dark'] {
-  --bg: #0f1419;
-  --surface: #141a23;
-  --surface-2: #1a2230;
-  --border: #1d2530;
-  --fg: #e5e9f0;
-  --muted: #7a8597;
-  --accent: #7dd3a0;
-  --danger: #e88a8a;
-  --info: #6ea8ff;
-}
-
-:root[data-theme='light'] {
-  --bg: #ffffff;
-  --surface: #f8f9fb;
-  --surface-2: #eef1f6;
-  --border: #e1e4e8;
-  --fg: #1a1f2e;
-  --muted: #5b6373;
-  --accent: #2f9c5f;
-  --danger: #c53030;
-  --info: #2563eb;
-}
+@import './tokens.css';
 
 * { box-sizing: border-box; }
 
@@ -1970,122 +2075,356 @@ html, body {
   padding: 0;
   background: var(--bg);
   color: var(--fg);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  font-size: 15px;
-  line-height: 1.45;
-  font-feature-settings: 'tnum';
+  font-family: var(--mono);
+  font-size: var(--t-base);
+  line-height: 1.55;
+  font-feature-settings: 'tnum', 'zero', 'ss01';
+  -webkit-font-smoothing: antialiased;
 }
 
-button, input, select {
-  font: inherit;
-  color: inherit;
-}
+::selection { background: var(--amber); color: var(--bg); }
 
-button {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  color: var(--fg);
-  border-radius: 6px;
-  padding: 6px 12px;
-  cursor: pointer;
-}
-button:hover { background: var(--border); }
+button, input, select, textarea { font: inherit; color: inherit; border-radius: 0; }
 
-input[type='number'], input[type='text'], input[type='date'], select {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 10px;
-  color: var(--fg);
-  width: 100%;
-  max-width: 220px;
-}
+a { color: var(--amber); }
 
+/* --- App shell --- */
 .app-shell {
-  max-width: 720px;
+  max-width: 760px;
   margin: 0 auto;
-  padding: 16px;
+  padding: var(--gap-6) var(--gap-6) var(--gap-12);
+  position: relative;
+  z-index: 1;
 }
 
+/* --- Header --- */
 .header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--gap-2);
   flex-wrap: wrap;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
+  padding-bottom: var(--gap-4);
+  border-bottom: 1px solid var(--border-2);
 }
-
 .brand {
-  font-weight: 700;
-  font-size: 18px;
   margin-right: auto;
+  font-weight: 700;
+  font-size: var(--t-lg);
+  letter-spacing: 0.02em;
+  color: var(--fg);
+  display: inline-flex;
+  gap: var(--gap-2);
+  align-items: baseline;
+}
+.brand-amber { color: var(--amber); }
+.brand-sep { color: var(--label); }
+.brand-sub {
+  font-size: var(--t-mini);
+  letter-spacing: 0.2em;
+  color: var(--label);
+  text-transform: uppercase;
+  font-weight: 500;
+  padding-left: var(--gap-3);
+  border-left: 1px solid var(--border-2);
+}
+.header-clock {
+  font-size: var(--t-mini);
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  text-transform: uppercase;
 }
 
-.sticky-results {
-  position: sticky;
-  top: 0;
-  background: var(--bg);
-  z-index: 10;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px 14px;
-  margin-top: 10px;
-}
-
-.card-title {
+/* --- Labels --- */
+.label {
+  font-size: var(--t-mini);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
   font-weight: 600;
+}
+.label::before { content: '> '; color: var(--amber); }
+.label.plain::before { content: none; }
+
+.label-dim {
+  font-size: var(--t-mini);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--label);
+}
+
+/* --- Card --- */
+.card {
+  margin-top: var(--gap-4);
+  background: var(--surface-1);
+  border: 1px solid var(--border-2);
+  position: relative;
+}
+.card-head {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
+  padding: var(--gap-4) var(--gap-5);
   cursor: pointer;
+  user-select: none;
+}
+.card-head:hover .card-title { color: var(--amber); }
+.card-title {
+  font-size: var(--t-med);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg);
+  transition: color 0.15s ease;
+}
+.card-title::before { content: '> '; color: var(--amber); }
+.card-sub {
+  font-size: var(--t-small);
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.card-body {
+  padding: var(--gap-3) var(--gap-5) var(--gap-5);
+  border-top: 1px solid var(--border);
 }
 
-.muted { color: var(--muted); font-size: 13px; }
-
-.number { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-
-.surplus { color: var(--accent); }
-.deficit { color: var(--danger); }
-
-.row {
+/* --- Field row --- */
+.field {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 8px;
-  padding: 6px 0;
+  gap: var(--gap-3);
+  padding: var(--gap-2) 0;
+  border-bottom: 1px dashed var(--border);
 }
-@media (max-width: 480px) {
-  .row { grid-template-columns: 1fr; }
+.field:last-child { border-bottom: 0; }
+.field-key { color: var(--muted); }
+.field-hint {
+  display: block;
+  font-size: var(--t-mini);
+  color: var(--label);
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+  text-transform: lowercase;
 }
 
+/* --- Inputs --- */
+.input {
+  background: var(--surface-3);
+  border: 1px solid var(--border-2);
+  color: var(--amber);
+  font: 500 var(--t-med)/1.4 var(--mono);
+  padding: 6px 10px;
+  font-feature-settings: 'tnum';
+  text-align: right;
+  min-width: 160px;
+  max-width: 220px;
+  transition: border-color 0.12s ease, outline-color 0.12s ease;
+}
+.input.text { color: var(--fg); text-align: left; }
+.input.date { color: var(--fg); text-align: left; }
+.input:focus {
+  outline: 1px solid var(--amber-soft);
+  outline-offset: 0;
+  border-color: var(--amber);
+}
+.input::placeholder { color: var(--label); }
+
+/* Bracket framing on inputs (subtle, like terminal prompts) */
+.bracketed { display: inline-flex; align-items: center; }
+.bracketed::before { content: '['; color: var(--label); padding-right: 4px; }
+.bracketed::after  { content: ']'; color: var(--label); padding-left: 4px; }
+
+/* --- Buttons --- */
+.btn {
+  background: transparent;
+  border: 1px solid var(--border-2);
+  color: var(--fg);
+  font: 600 var(--t-small)/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.btn:hover { border-color: var(--amber); color: var(--amber); }
+.btn.icon { padding: 6px 9px; letter-spacing: 0; }
+.btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+.btn-block {
+  width: 100%;
+  margin-top: var(--gap-3);
+  border-style: dashed;
+}
+.btn-block:hover { background: var(--surface-2); }
+
+/* --- Select --- */
+.select {
+  background: var(--surface-3);
+  border: 1px solid var(--border-2);
+  color: var(--fg);
+  font: 500 var(--t-small)/1.4 var(--mono);
+  padding: 6px 10px;
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 26px;
+}
+
+/* --- Toggle group --- */
+.toggle-group {
+  display: inline-flex;
+  border: 1px solid var(--border-2);
+}
+.toggle-group button {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font: 600 var(--t-mini)/1 var(--mono);
+  letter-spacing: 0.16em;
+  padding: 7px 10px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+.toggle-group button.on { background: var(--surface-3); color: var(--amber); }
+
+/* --- Number style --- */
+.number { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
+.amber { color: var(--amber); }
+.ok    { color: var(--ok); }
+.danger{ color: var(--danger); }
+.muted { color: var(--muted); }
+
+/* --- Ornament --- */
+.ornament {
+  text-align: center;
+  margin: var(--gap-8) 0 0;
+  color: var(--label);
+  font-size: var(--t-small);
+  letter-spacing: 0.5em;
+}
+
+/* --- Print toggle --- */
 .print-only { display: none; }
 
-@media print {
-  .app-shell { display: none; }
-  .print-only { display: block; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 ```
 
-- [ ] **Step 2: Wire global.css into entry**
+- [ ] **Step 2: Update `src/app.css` to import**
 
-Replace contents of `src/app.css` (created by scaffold) with a single import:
+Replace `src/app.css`:
 
 ```css
 @import './styles/global.css';
 ```
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 3: Set default theme attribute**
+
+In `index.html`, change the `<html>` tag to:
+
+```html
+<html lang="en" data-theme="dark">
+```
+
+- [ ] **Step 4: Commit**
 
 ```bash
-git add src/styles/global.css src/app.css
-git commit -m "feat(style): global CSS with dark/light theme tokens"
+git add src/styles/global.css src/app.css index.html
+git commit -m "feat(style): terminal/brutalist base styles — JetBrains Mono, ASCII labels, amber accent"
+```
+
+---
+
+## Task 21D: motion.ts — tweened number store
+
+**Files:**
+- Create: `src/lib/motion.ts`
+
+- [ ] **Step 1: Write helper**
+
+Create `src/lib/motion.ts`:
+
+```ts
+import { tweened } from 'svelte/motion';
+import { cubicOut } from 'svelte/easing';
+
+export function tweenedNumber(initial = 0, duration = 400) {
+  return tweened(initial, { duration, easing: cubicOut });
+}
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add src/lib/motion.ts
+git commit -m "feat(motion): tweenedNumber helper for animated count-ups"
+```
+
+---
+
+## Task 21E: Atmosphere.svelte — scanline + static + vignette overlays
+
+**Files:**
+- Create: `src/components/Atmosphere.svelte`
+
+- [ ] **Step 1: Write component**
+
+Create `src/components/Atmosphere.svelte`:
+
+```svelte
+<div class="atmos">
+  <div class="vignette"></div>
+  <div class="static"></div>
+  <div class="scanline"></div>
+</div>
+
+<style>
+  .atmos { position: fixed; inset: 0; pointer-events: none; z-index: 90; }
+  .vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at center, transparent 0%, transparent 50%, rgba(0,0,0,0.55) 100%);
+  }
+  .static {
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,0.018) 0,
+      rgba(255,255,255,0.018) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+  .scanline {
+    position: absolute; left: 0; right: 0; top: -2px;
+    height: 2px;
+    background: linear-gradient(180deg, transparent, rgba(255, 180, 84, 0.10), transparent);
+    animation: scan 8s linear infinite;
+  }
+  @keyframes scan { to { top: 100%; } }
+
+  /* Suppress atmosphere on light theme — keep the paper-terminal calm */
+  :global([data-theme='light']) .static,
+  :global([data-theme='light']) .vignette,
+  :global([data-theme='light']) .scanline { display: none; }
+
+  @media print { .atmos { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .scanline { display: none; } }
+</style>
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add src/components/Atmosphere.svelte
+git commit -m "feat(ui): Atmosphere — scanline + static + vignette overlays"
 ```
 
 ---
@@ -2110,7 +2449,7 @@ Create `src/components/controls/CollapsibleCard.svelte`:
     onToggle?: (open: boolean) => void;
     children?: import('svelte').Snippet;
   };
-  let { title, subtitle, open = true, onToggle, children }: Props = $props();
+  let { title, subtitle, open = $bindable(true), onToggle, children }: Props = $props();
 
   function toggle() {
     open = !open;
@@ -2118,28 +2457,24 @@ Create `src/components/controls/CollapsibleCard.svelte`:
   }
 </script>
 
-<div class="card">
-  <button class="card-title" onclick={toggle} aria-expanded={open}>
-    <span>
-      {title}
-      {#if subtitle}<span class="muted"> — {subtitle}</span>{/if}
-    </span>
-    <span class="muted">{open ? '▴' : '▾'}</span>
+<section class="card">
+  <button class="card-head" type="button" onclick={toggle} aria-expanded={open}>
+    <span class="card-title">{title}</span>
+    <span class="card-sub">{#if subtitle}{subtitle} · {/if}{open ? '─' : '+'}</span>
   </button>
   {#if open}
-    <div style="margin-top: 8px;">
+    <div class="card-body">
       {@render children?.()}
     </div>
   {/if}
-</div>
+</section>
 
 <style>
-  .card-title {
+  button.card-head {
     background: transparent;
     border: 0;
     width: 100%;
     text-align: left;
-    padding: 0;
   }
 </style>
 ```
@@ -2166,12 +2501,13 @@ Create `src/components/controls/CurrencyInput.svelte`:
 <script lang="ts">
   type Props = {
     label: string;
+    hint?: string;
     value: number;
     onChange: (n: number) => void;
-    suffix?: string;     // "₽" or "$"
+    suffix?: string;
     placeholder?: string;
   };
-  let { label, value, onChange, suffix = '', placeholder }: Props = $props();
+  let { label, hint, value, onChange, suffix = '', placeholder }: Props = $props();
 
   function handle(e: Event) {
     const target = e.target as HTMLInputElement;
@@ -2180,9 +2516,13 @@ Create `src/components/controls/CurrencyInput.svelte`:
   }
 </script>
 
-<label class="row">
-  <span class="muted">{label}{#if suffix} ({suffix}){/if}</span>
+<label class="field">
+  <span>
+    <span class="field-key">{label}{#if suffix} · {suffix}{/if}</span>
+    {#if hint}<span class="field-hint">{hint}</span>{/if}
+  </span>
   <input
+    class="input"
     type="number"
     inputmode="decimal"
     min="0"
@@ -2216,10 +2556,11 @@ Create `src/components/controls/DateInput.svelte`:
 <script lang="ts">
   type Props = {
     label: string;
-    value: string;       // ISO date YYYY-MM-DD
+    hint?: string;
+    value: string;
     onChange: (iso: string) => void;
   };
-  let { label, value, onChange }: Props = $props();
+  let { label, hint, value, onChange }: Props = $props();
 
   function handle(e: Event) {
     const target = e.target as HTMLInputElement;
@@ -2227,9 +2568,12 @@ Create `src/components/controls/DateInput.svelte`:
   }
 </script>
 
-<label class="row">
-  <span class="muted">{label}</span>
-  <input type="date" value={value} oninput={handle} />
+<label class="field">
+  <span>
+    <span class="field-key">{label}</span>
+    {#if hint}<span class="field-hint">{hint}</span>{/if}
+  </span>
+  <input class="input date" type="date" value={value} oninput={handle} />
 </label>
 ```
 
@@ -2264,18 +2608,10 @@ Create `src/components/controls/LangToggle.svelte`:
   }
 </script>
 
-<div class="toggle">
-  <button class:active={app.ui.language === 'ru'} onclick={() => setLang('ru')}>RU</button>
-  <button class:active={app.ui.language === 'en'} onclick={() => setLang('en')}>EN</button>
+<div class="toggle-group" role="group" aria-label="Language">
+  <button type="button" class:on={app.ui.language === 'ru'} onclick={() => setLang('ru')}>RU</button>
+  <button type="button" class:on={app.ui.language === 'en'} onclick={() => setLang('en')}>EN</button>
 </div>
-
-<style>
-  .toggle { display: inline-flex; }
-  .toggle button { border-radius: 0; padding: 4px 10px; }
-  .toggle button:first-child { border-radius: 6px 0 0 6px; }
-  .toggle button:last-child { border-radius: 0 6px 6px 0; }
-  .toggle button.active { background: var(--accent); color: #0f1419; border-color: var(--accent); }
-</style>
 ```
 
 - [ ] **Step 2: Write ThemeToggle**
@@ -2293,8 +2629,10 @@ Create `src/components/controls/ThemeToggle.svelte`:
   }
 </script>
 
-<button onclick={() => setTheme(app.ui.theme === 'dark' ? 'light' : 'dark')} aria-label="Toggle theme">
-  {app.ui.theme === 'dark' ? '☀' : '🌙'}
+<button type="button" class="btn icon"
+        onclick={() => setTheme(app.ui.theme === 'dark' ? 'light' : 'dark')}
+        aria-label="Toggle theme">
+  {app.ui.theme === 'dark' ? '☀' : '☾'}
 </button>
 ```
 
@@ -2338,18 +2676,25 @@ Create `src/components/sections/ContextSection.svelte`:
 <CollapsibleCard title={$_('context.title')}>
   <DateInput label={$_('context.returnDate')} value={inputs.returnDate} onChange={setReturn} />
   <DateInput label={$_('context.voyageDate')} value={inputs.voyageDate} onChange={setVoyage} />
-  <CurrencyInput label={$_('context.lumpSum')} value={inputs.salaryLumpSumUsd} onChange={setLump} suffix="$" />
-  <div class="row">
-    <span class="muted">{$_('context.rate')}</span>
-    <div style="display:flex; gap:4px; align-items:center;">
-      <button onclick={() => bumpRate(-0.5)}>−0.5</button>
-      <input type="number" step="0.1" min="0" value={inputs.rubPerUsd}
-             oninput={(e) => setRate(Number((e.target as HTMLInputElement).value))}
-             style="max-width: 90px;" />
-      <button onclick={() => bumpRate(0.5)}>+0.5</button>
+  <CurrencyInput label={$_('context.lumpSum')} hint="informational · already in assets"
+                  value={inputs.salaryLumpSumUsd} onChange={setLump} suffix="$" />
+  <div class="field">
+    <span class="field-key">{$_('context.rate')}<span class="field-hint">tap −/+ to compare</span></span>
+    <div class="rate-stepper">
+      <button class="btn" type="button" onclick={() => bumpRate(-0.5)}>−</button>
+      <input class="input" type="number" step="0.1" min="0" value={inputs.rubPerUsd}
+             oninput={(e) => setRate(Number((e.target as HTMLInputElement).value))} />
+      <button class="btn" type="button" onclick={() => bumpRate(0.5)}>+</button>
     </div>
   </div>
 </CollapsibleCard>
+
+<style>
+  .rate-stepper { display: inline-flex; align-items: stretch; gap: 0; }
+  .rate-stepper .btn { padding: 0 10px; border-right: 0; }
+  .rate-stepper .btn:last-child { border-right: 1px solid var(--border-2); border-left: 0; }
+  .rate-stepper .input { min-width: 90px; max-width: 110px; text-align: center; }
+</style>
 ```
 
 - [ ] **Step 2: Commit**
@@ -2500,44 +2845,57 @@ Create `src/components/sections/GoalsSection.svelte`:
 
 <CollapsibleCard title={$_('goals.title')}>
   {#each inputs.goals as g (g.id)}
-    <div class="goal-row">
-      <input
+    <div class="goal-row" class:disabled={!g.enabled}>
+      <input class="input text"
         type="text" placeholder={$_('goals.name')} value={g.name}
         oninput={(e) => updateGoal(g.id, { name: (e.target as HTMLInputElement).value })} />
-      <input
-        type="number" min="0" step="any" placeholder={$_('goals.amount')} value={g.amountRub === 0 ? '' : g.amountRub}
+      <input class="input"
+        type="number" min="0" step="any" placeholder="0" value={g.amountRub === 0 ? '' : g.amountRub}
         oninput={(e) => updateGoal(g.id, { amountRub: Number((e.target as HTMLInputElement).value) || 0 })} />
-      <select value={g.mode}
+      <select class="select" value={g.mode}
               onchange={(e) => updateGoal(g.id, { mode: (e.target as HTMLSelectElement).value as GoalMode })}>
         <option value="lump">{$_('goals.mode.lump')}</option>
         <option value="spread">{$_('goals.mode.spread')}</option>
       </select>
-      <input type="date" value={g.date}
+      <input class="input date" type="date" value={g.date}
              oninput={(e) => updateGoal(g.id, { date: (e.target as HTMLInputElement).value })} />
       {#if g.mode === 'spread'}
-        <input type="date" value={g.endDate ?? g.date}
+        <input class="input date" type="date" value={g.endDate ?? g.date}
                oninput={(e) => updateGoal(g.id, { endDate: (e.target as HTMLInputElement).value })} />
       {/if}
-      <label class="muted">
+      <label class="goal-check">
         <input type="checkbox" checked={g.enabled}
                onchange={(e) => updateGoal(g.id, { enabled: (e.target as HTMLInputElement).checked })} />
-        {$_('goals.enabled')}
+        <span>on</span>
       </label>
-      <button onclick={() => removeGoal(g.id)} aria-label="Delete">×</button>
+      <button class="btn icon danger" type="button" onclick={() => removeGoal(g.id)} aria-label="Delete">×</button>
     </div>
   {/each}
-  <button onclick={addGoal} style="margin-top: 8px;">{$_('goals.add')}</button>
+  <button class="btn btn-block" type="button" onclick={addGoal}>{$_('goals.add')}</button>
 </CollapsibleCard>
 
 <style>
   .goal-row {
     display: grid;
-    grid-template-columns: 1.4fr 1fr 0.8fr 1fr 1fr auto auto;
-    gap: 6px;
+    grid-template-columns: 1.4fr 1fr 0.9fr 1fr 1fr auto auto;
+    gap: var(--gap-2);
     align-items: center;
-    padding: 4px 0;
-    border-bottom: 1px solid var(--border);
+    padding: var(--gap-2) 0;
+    border-bottom: 1px dashed var(--border);
+    transition: opacity 0.15s ease;
   }
+  .goal-row.disabled { opacity: 0.45; }
+  .goal-row .input, .goal-row .select { min-width: 0; max-width: none; width: 100%; }
+  .goal-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--muted);
+    font-size: var(--t-mini);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .goal-check input { accent-color: var(--amber); }
   @media (max-width: 600px) {
     .goal-row { grid-template-columns: 1fr 1fr; }
   }
@@ -2601,38 +2959,47 @@ Create `src/components/sections/InvestmentsSection.svelte`:
 <CollapsibleCard title={$_('investments.title')}>
   {#each inputs.investments as inv (inv.id)}
     <div class="inv-row">
-      <input type="text" placeholder={$_('investments.name')} value={inv.name}
+      <input class="input text" type="text" placeholder={$_('investments.name')} value={inv.name}
              oninput={(e) => update(inv.id, { name: (e.target as HTMLInputElement).value })} />
-      <select value={inv.kind}
+      <select class="select" value={inv.kind}
               onchange={(e) => update(inv.id, { kind: (e.target as HTMLSelectElement).value as InstrumentKind })}>
         {#each kinds as k}
           <option value={k}>{$_(`investments.kind.${k}`)}</option>
         {/each}
       </select>
-      <input type="number" min="0" step="any" placeholder={$_('investments.amount')} value={inv.amountRub === 0 ? '' : inv.amountRub}
+      <input class="input" type="number" min="0" step="any" placeholder="0" value={inv.amountRub === 0 ? '' : inv.amountRub}
              oninput={(e) => update(inv.id, { amountRub: Number((e.target as HTMLInputElement).value) || 0 })} />
-      <input type="number" min="0" step="0.1" placeholder={$_('investments.rate')} value={inv.annualRatePct}
+      <input class="input" type="number" min="0" step="0.1" placeholder="%" value={inv.annualRatePct}
              oninput={(e) => update(inv.id, { annualRatePct: Number((e.target as HTMLInputElement).value) || 0 })} />
-      <label class="muted">
+      <label class="inv-check">
         <input type="checkbox" checked={inv.reinvest}
                onchange={(e) => update(inv.id, { reinvest: (e.target as HTMLInputElement).checked })} />
-        {$_('investments.reinvest')}
+        <span>reinvest</span>
       </label>
-      <button onclick={() => remove(inv.id)} aria-label="Delete">×</button>
+      <button class="btn icon danger" type="button" onclick={() => remove(inv.id)} aria-label="Delete">×</button>
     </div>
   {/each}
-  <button onclick={add} style="margin-top: 8px;">{$_('investments.add')}</button>
+  <button class="btn btn-block" type="button" onclick={add}>{$_('investments.add')}</button>
 </CollapsibleCard>
 
 <style>
   .inv-row {
     display: grid;
     grid-template-columns: 1.2fr 1fr 1fr 0.8fr auto auto;
-    gap: 6px;
+    gap: var(--gap-2);
     align-items: center;
-    padding: 4px 0;
-    border-bottom: 1px solid var(--border);
+    padding: var(--gap-2) 0;
+    border-bottom: 1px dashed var(--border);
   }
+  .inv-row .input, .inv-row .select { min-width: 0; max-width: none; width: 100%; }
+  .inv-check {
+    display: inline-flex; gap: 4px; align-items: center;
+    color: var(--muted);
+    font-size: var(--t-mini);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .inv-check input { accent-color: var(--amber); }
   @media (max-width: 600px) {
     .inv-row { grid-template-columns: 1fr 1fr; }
   }
@@ -2729,7 +3096,7 @@ git commit -m "feat(ui): BreakdownSection — monthly table"
 
 # Phase 7 — Results display
 
-## Task 32: ResultsHeader.svelte
+## Task 32: ResultsHeader.svelte — sticky panel with cursor blink + tweened number
 
 **Files:**
 - Create: `src/components/ResultsHeader.svelte`
@@ -2741,46 +3108,176 @@ Create `src/components/ResultsHeader.svelte`:
 ```svelte
 <script lang="ts">
   import { _ } from 'svelte-i18n';
-  import { app } from '../lib/state/scenarios';
+  import { app, activeInputs } from '../lib/state/scenarios';
   import { currentResult } from '../lib/state/derived';
   import { formatRub, formatUsd, formatDate } from '../lib/format';
-  import { activeInputs } from '../lib/state/scenarios';
+  import { tweenedNumber } from '../lib/motion';
 
   const inputs = $derived(activeInputs());
   const result = $derived(currentResult());
+
+  const balance = tweenedNumber(0);
+  $effect(() => { balance.set(result.balanceAtVoyage); });
+
   const usdEquiv = $derived(result.balanceAtVoyage / inputs.rubPerUsd);
+  const burnPerDay = $derived(
+    result.days.length > 1
+      ? (result.days[0].totalRub - result.balanceAtVoyage) / Math.max(1, result.daysOfRunway)
+      : 0
+  );
 </script>
 
-<div class="sticky-results">
-  <div class="kpi">
-    <div class="kpi-label muted">{$_('results.leftOnVoyage')}</div>
-    <div class="kpi-value number" class:surplus={result.balanceAtVoyage > 0} class:deficit={result.balanceAtVoyage <= 0}>
-      {formatRub(result.balanceAtVoyage, app.ui.language)}
+<section class="sticky-results">
+  <div class="frame-top" aria-hidden="true"></div>
+
+  <div class="grid">
+    <div class="kpi-block">
+      <div class="kpi-label">
+        <span class="dot" aria-hidden="true"></span>
+        {$_('results.leftOnVoyage')} · {formatDate(inputs.voyageDate, app.ui.language)}
+      </div>
+      <div class="kpi-value number">
+        {formatRub($balance, app.ui.language)}<span class="cursor" aria-hidden="true"></span>
+      </div>
+      <div class="kpi-sub">
+        ≈ {formatUsd(usdEquiv, app.ui.language)} @ {inputs.rubPerUsd} ₽/$
+        <span class="sep">·</span>
+        {#if result.runsOutOn}
+          <span class="danger">{$_('results.runsOut').toLowerCase()}: {formatDate(result.runsOutOn, app.ui.language)}</span>
+        {:else}
+          <span class="ok">{$_('results.ok').toLowerCase()}</span>
+        {/if}
+      </div>
     </div>
-    <div class="muted">≈ {formatUsd(usdEquiv, app.ui.language)}</div>
+
+    <div class="stats">
+      <div class="stat-row">
+        <span class="stat-key">{$_('results.runway')}</span>
+        <span class="stat-dots"></span>
+        <span class="number">{$_('results.daysUnit', { values: { n: result.daysOfRunway } })}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">burn / day</span>
+        <span class="stat-dots"></span>
+        <span class="number">{formatRub(burnPerDay, app.ui.language)}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">yield</span>
+        <span class="stat-dots"></span>
+        <span class="number ok">+ {formatRub(result.totalInvestmentYieldRub, app.ui.language)}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">spent</span>
+        <span class="stat-dots"></span>
+        <span class="number">{formatRub(result.totalSpentRub, app.ui.language)}</span>
+      </div>
+    </div>
   </div>
 
-  <div class="kpi-row">
-    <div>
-      <span class="muted">{$_('results.runsOut')}: </span>
-      {#if result.runsOutOn}
-        <span class="deficit number">{formatDate(result.runsOutOn, app.ui.language)}</span>
-      {:else}
-        <span class="surplus">{$_('results.ok')}</span>
-      {/if}
-    </div>
-    <div>
-      <span class="muted">{$_('results.runway')}: </span>
-      <span class="number">{$_('results.daysUnit', { values: { n: result.daysOfRunway } })}</span>
-    </div>
-  </div>
-</div>
+  <div class="frame-bot" aria-hidden="true"></div>
+</section>
 
 <style>
-  .kpi-label { font-size: 12px; letter-spacing: 0.4px; text-transform: uppercase; }
-  .kpi-value { font-size: 26px; font-weight: 700; margin: 2px 0; }
-  .kpi-row { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; margin-top: 6px; flex-wrap: wrap; }
+  .sticky-results {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    margin-top: var(--gap-5);
+    background: var(--surface-2);
+    border: 1px solid var(--amber);
+    padding: var(--gap-4) var(--gap-5);
+    box-shadow: 0 1px 0 var(--amber-soft);
+  }
+  .frame-top, .frame-bot {
+    height: 1px;
+    margin: 0 -1px;
+    background: repeating-linear-gradient(90deg, var(--amber) 0 6px, transparent 6px 10px);
+    opacity: 0.5;
+  }
+  .frame-top { margin-bottom: var(--gap-4); }
+  .frame-bot { margin-top: var(--gap-4); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: var(--gap-6);
+  }
+  @media (max-width: 620px) {
+    .grid { grid-template-columns: 1fr; gap: var(--gap-4); }
+  }
+
+  .kpi-label {
+    font-size: var(--t-mini);
+    color: var(--muted);
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: var(--gap-2);
+  }
+  .dot {
+    width: 6px; height: 6px;
+    background: var(--amber);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--amber);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.35; }
+  }
+
+  .kpi-value {
+    font-size: var(--t-3xl);
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--amber);
+    margin: var(--gap-2) 0 var(--gap-2);
+  }
+  .cursor {
+    display: inline-block;
+    width: 0.55em; height: 1em;
+    background: var(--amber);
+    margin-left: 0.18em;
+    vertical-align: -0.15em;
+    animation: blink 1.2s steps(2) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .kpi-sub {
+    font-size: var(--t-small);
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+  .kpi-sub .sep { margin: 0 var(--gap-2); color: var(--label); }
+  .ok     { color: var(--ok); }
+  .danger { color: var(--danger); }
+
+  .stats {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-2);
+    align-self: center;
+  }
+  .stat-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    gap: var(--gap-2);
+    font-size: var(--t-small);
+  }
+  .stat-key { color: var(--muted); text-transform: uppercase; letter-spacing: 0.14em; font-size: var(--t-mini); }
+  .stat-dots {
+    border-bottom: 1px dotted var(--border-3);
+    height: 1em;
+  }
 </style>
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add src/components/ResultsHeader.svelte
+git commit -m "feat(ui): ResultsHeader — terminal KPI panel with cursor blink and tweened balance"
 ```
 
 - [ ] **Step 2: Commit**
@@ -2816,9 +3313,10 @@ Create `src/components/BalanceChart.svelte`:
   function colors() {
     const dark = app.ui.theme === 'dark';
     return {
-      line: '#7dd3a0',
-      grid: dark ? '#1d2530' : '#e1e4e8',
-      label: dark ? '#7a8597' : '#5b6373',
+      line: dark ? '#ffb454' : '#b8651d',
+      fill: dark ? 'rgba(255,180,84,0.10)' : 'rgba(184,101,29,0.08)',
+      grid: dark ? '#1f1f1f' : '#c8bfa8',
+      label: dark ? '#707070' : '#6e6655',
     };
   }
 
@@ -2830,19 +3328,27 @@ Create `src/components/BalanceChart.svelte`:
       datasets: [{
         data: r.days.map(d => d.totalRub),
         borderColor: c.line,
-        backgroundColor: c.line + '22',
+        backgroundColor: c.fill,
+        borderWidth: 1.5,
         fill: true,
         pointRadius: 0,
-        tension: 0.2,
+        tension: 0,  // sharp, deterministic line — no smoothing
       }],
     };
     const options: any = {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      animation: { duration: 600, easing: 'easeOutCubic' },
+      plugins: { legend: { display: false }, tooltip: {
+        backgroundColor: 'rgba(15,15,15,0.95)', borderColor: c.line, borderWidth: 1,
+        titleColor: c.line, bodyColor: '#e4e4e4', titleFont: { family: 'JetBrains Mono' },
+        bodyFont: { family: 'JetBrains Mono' },
+      } },
       scales: {
-        x: { ticks: { color: c.label, maxTicksLimit: 6 }, grid: { color: c.grid } },
-        y: { ticks: { color: c.label }, grid: { color: c.grid } },
+        x: { ticks: { color: c.label, font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 6 },
+             grid: { color: c.grid } },
+        y: { ticks: { color: c.label, font: { family: 'JetBrains Mono', size: 10 } },
+             grid: { color: c.grid } },
       },
     };
     if (chart) {
@@ -2868,11 +3374,43 @@ Create `src/components/BalanceChart.svelte`:
 </script>
 
 <div class="chart-wrap">
-  <canvas bind:this={canvas}></canvas>
+  <div class="chart-frame">
+    <div class="chart-corner tl"></div><div class="chart-corner tr"></div>
+    <div class="chart-corner bl"></div><div class="chart-corner br"></div>
+    <div class="chart-label">▸ BALANCE / TIME · ₽</div>
+    <canvas bind:this={canvas}></canvas>
+  </div>
 </div>
 
 <style>
-  .chart-wrap { height: 220px; margin-top: 10px; }
+  .chart-wrap { margin-top: var(--gap-4); }
+  .chart-frame {
+    position: relative;
+    height: 240px;
+    padding: var(--gap-5) var(--gap-4) var(--gap-3);
+    background: var(--surface-1);
+    border: 1px solid var(--border-2);
+  }
+  .chart-label {
+    position: absolute;
+    top: 8px; left: 12px;
+    font-size: var(--t-mini);
+    color: var(--amber);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .chart-corner {
+    position: absolute;
+    width: 10px; height: 10px;
+    border-color: var(--amber);
+    border-style: solid;
+    border-width: 0;
+  }
+  .tl { top: -1px; left: -1px;   border-top-width: 1px; border-left-width: 1px; }
+  .tr { top: -1px; right: -1px;  border-top-width: 1px; border-right-width: 1px; }
+  .bl { bottom: -1px; left: -1px; border-bottom-width: 1px; border-left-width: 1px; }
+  .br { bottom: -1px; right: -1px; border-bottom-width: 1px; border-right-width: 1px; }
+  canvas { width: 100%; height: 100%; }
 </style>
 ```
 
@@ -2997,6 +3535,7 @@ Overwrite `src/App.svelte`:
   import { app } from './lib/state/scenarios';
   import { initI18n } from './lib/i18n';
 
+  import Atmosphere from './components/Atmosphere.svelte';
   import ScenarioPicker from './components/ScenarioPicker.svelte';
   import LangToggle from './components/controls/LangToggle.svelte';
   import ThemeToggle from './components/controls/ThemeToggle.svelte';
@@ -3010,25 +3549,52 @@ Overwrite `src/App.svelte`:
   import BreakdownSection from './components/sections/BreakdownSection.svelte';
   import PrintView from './components/PrintView.svelte';
 
+  let clock = $state('');
+  function updateClock() {
+    const d = new Date();
+    const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = months[d.getMonth()];
+    const yyyy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    clock = `${dd}.${mm}.${yyyy} / ${hh}:${mi}`;
+  }
+
   onMount(() => {
     initI18n(app.ui.language);
     document.documentElement.setAttribute('data-theme', app.ui.theme);
+    updateClock();
+    const id = setInterval(updateClock, 30_000);
+    return () => clearInterval(id);
   });
 
   function onPrint() { window.print(); }
 </script>
 
+<Atmosphere />
+
 <div class="app-shell">
   <header class="header">
-    <span class="brand">{$_('app.title')}</span>
+    <span class="brand">
+      <span class="brand-amber">FAMILYCALC</span>
+      <span class="brand-sep">::</span>
+      <span class="brand-sub">{$_('app.title')}</span>
+    </span>
+    <span class="header-clock">{clock}</span>
+  </header>
+
+  <div class="header-controls">
     <ScenarioPicker />
     <LangToggle />
     <ThemeToggle />
-    <button onclick={onPrint} title={$_('header.print')}>🖨</button>
-  </header>
+    <button class="btn icon" type="button" onclick={onPrint} title={$_('header.print')}>PRINT</button>
+  </div>
 
   <ResultsHeader />
   <BalanceChart />
+
+  <div class="ornament">─── ─── ───</div>
 
   <ContextSection />
   <AssetsSection />
@@ -3036,9 +3602,22 @@ Overwrite `src/App.svelte`:
   <GoalsSection />
   <InvestmentsSection />
   <BreakdownSection />
+
+  <div class="ornament">─── FIN ───</div>
 </div>
 
 <PrintView />
+
+<style>
+  .header-controls {
+    display: flex;
+    gap: var(--gap-2);
+    align-items: center;
+    flex-wrap: wrap;
+    padding: var(--gap-3) 0;
+    border-bottom: 1px solid var(--border);
+  }
+</style>
 ```
 
 - [ ] **Step 2: Verify dev server loads with no errors**
@@ -3183,15 +3762,42 @@ Create `src/components/PrintView.svelte`:
 </div>
 
 <style>
-  .print-view { padding: 0; font-family: Georgia, serif; color: #000; background: #fff; }
-  .print-view h1 { font-size: 22px; margin: 0 0 4px; }
-  .print-view h2 { font-size: 14px; margin: 14px 0 4px; border-bottom: 1px solid #000; padding-bottom: 2px; }
-  .print-view section { page-break-inside: avoid; margin-bottom: 8px; }
-  .print-view p { margin: 2px 0; font-size: 12pt; }
-  .print-view .big { font-size: 22pt; font-weight: bold; }
-  .print-view .meta { font-size: 11pt; color: #555; margin-bottom: 10px; }
-  .print-view .muted { color: #666; }
-  .print-view ul { margin: 0; padding-left: 18px; }
+  .print-view {
+    padding: 0;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    color: #1a1815;
+    background: #f5f1e8;
+    font-size: 11pt;
+    line-height: 1.5;
+    font-feature-settings: 'tnum';
+  }
+  .print-view h1 {
+    font-size: 20pt;
+    margin: 0 0 6px;
+    letter-spacing: 0.04em;
+    border-bottom: 2px solid #1a1815;
+    padding-bottom: 6px;
+  }
+  .print-view h2 {
+    font-size: 11pt;
+    margin: 18px 0 6px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .print-view h2::before { content: '> '; color: #b8651d; }
+  .print-view section { page-break-inside: avoid; margin-bottom: 10px; }
+  .print-view p { margin: 3px 0; font-size: 11pt; }
+  .print-view .big {
+    font-size: 28pt;
+    font-weight: 700;
+    color: #b8651d;
+    letter-spacing: -0.02em;
+    margin: 4px 0;
+  }
+  .print-view .meta { font-size: 10pt; color: #6e6655; margin-bottom: 12px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .print-view .muted { color: #6e6655; }
+  .print-view ul { margin: 0; padding-left: 18px; list-style: none; }
+  .print-view li::before { content: '· '; color: #b8651d; }
 </style>
 ```
 
@@ -3202,10 +3808,31 @@ Create `src/styles/print.css`:
 ```css
 @media print {
   @page { size: A4; margin: 12mm 14mm; }
-  html, body {
-    background: white !important;
-    color: black !important;
+
+  /* Force paper-terminal palette regardless of UI theme */
+  :root, :root[data-theme='dark'] {
+    --bg: #f5f1e8 !important;
+    --surface-1: #f0ebde !important;
+    --surface-2: #ebe5d4 !important;
+    --surface-3: #e3dcc8 !important;
+    --border: #c8bfa8 !important;
+    --border-2: #a89e85 !important;
+    --border-3: #6e6655 !important;
+    --fg: #1a1815 !important;
+    --fg-dim: #4a4538 !important;
+    --muted: #6e6655 !important;
+    --label: #8a8270 !important;
+    --amber: #b8651d !important;
+    --amber-soft: rgba(184,101,29,0.10) !important;
   }
+
+  html, body { background: #f5f1e8 !important; color: #1a1815 !important; }
+
+  .app-shell { display: none; }
+  .print-only, .print-view { display: block !important; }
+
+  /* Strip atmosphere from print */
+  .atmos, .scanline, .vignette, .static { display: none !important; }
 }
 ```
 
@@ -3355,25 +3982,32 @@ git tag mvp-v1
 
 # Self-Review
 
-**Spec coverage check** (cross-referenced with `docs/superpowers/specs/2026-05-14-family-calc-design.md`):
+**Spec coverage check** (cross-referenced with both specs):
 
 | Spec section | Covered by |
 |---|---|
-| §3 Tech stack | Tasks 1–4 |
-| §4 Project structure | Task 5 (directories), then per-component tasks |
-| §5 Data model | Task 6 |
-| §6 Calc engine | Tasks 7–14 |
-| §7 UI layout | Tasks 21, 26–34 |
-| §8 PDF/print | Task 37 |
-| §9 i18n | Tasks 19–20 |
-| §10 Scenarios & persistence | Tasks 15–18, 34 |
-| §11 Build/dev/deploy | Tasks 38–40 |
-| §12 Initial bootstrap | Tasks 1–5 |
+| Main §3 Tech stack | Tasks 1–4, 21B (fonts) |
+| Main §4 Project structure | Task 5 (directories), then per-component tasks |
+| Main §5 Data model | Task 6 |
+| Main §6 Calc engine | Tasks 7–14 |
+| Main §7 UI layout | Tasks 21A–E (style foundations), 22–34 (components) |
+| Main §8 PDF/print | Task 37 (PrintView + print stylesheet — paper-terminal palette) |
+| Main §9 i18n | Tasks 19–20 |
+| Main §10 Scenarios & persistence | Tasks 15–18, 34 |
+| Main §11 Build/dev/deploy | Tasks 38–40 |
+| Main §12 Initial bootstrap | Tasks 1–5 |
+| Design-system §2 Typography | Task 21B (JetBrains Mono via Google Fonts) |
+| Design-system §3 Colors | Task 21A (tokens.css) |
+| Design-system §7 Atmosphere | Task 21E (Atmosphere.svelte) |
+| Design-system §8 Motion | Task 21D (motion.ts → tweenedNumber), Task 32 (cursor blink, tweened balance), Task 33 (chart animation) |
+| Design-system §9 Components | Task 21C (component primitives in global.css) used by Tasks 22–34 |
 
 No spec section is unimplemented.
 
 **Placeholder scan:** No "TBD", "TODO", "fill in later", or "similar to" references — every task contains complete code.
 
-**Type consistency check:** Investment type, AppState, Inputs, SimulationResult are all defined in Task 6 and referenced consistently. `persistSoon`, `activeInputs`, `currentResult`, `app` are all defined in Tasks 17–18 and used as defined in every section component.
+**Type consistency check:** Investment type, AppState, Inputs, SimulationResult are all defined in Task 6 and referenced consistently. `persistSoon`, `activeInputs`, `currentResult`, `app` are all defined in Tasks 17–18 and used as defined in every section component. `tweenedNumber` defined in Task 21D and used in Task 32.
+
+**Style class consistency:** `.card`, `.card-head`, `.card-title`, `.card-sub`, `.card-body`, `.field`, `.field-key`, `.field-hint`, `.input`, `.select`, `.btn`, `.btn-block`, `.btn.icon`, `.btn.danger`, `.toggle-group`, `.ornament`, `.number`, `.amber`, `.ok`, `.danger`, `.muted`, `.print-only` are all defined in Task 21C and used consistently in Tasks 22–37.
 
 Plan is internally consistent and complete.
