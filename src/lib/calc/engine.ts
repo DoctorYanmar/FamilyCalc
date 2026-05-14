@@ -1,7 +1,7 @@
 import type { Inputs, SimulationResult, DayPoint, AssetMix, GoalEvent } from './types';
 
 const MS_PER_DAY = 86_400_000;
-const DAYS_PER_MONTH = 30.4375;
+const DAYS_PER_MONTH = 30.4375;  // 365.25 / 12 (Gregorian average)
 
 function toISO(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -32,6 +32,8 @@ function drain(assets: AssetMix, rubAmount: number, rate: number): void {
   remaining -= fromUsdCash * rate;
   if (remaining <= 0) return;
 
+  // All buckets exhausted; record overspend as negative rubBank so totalRub goes
+  // negative on this day and runsOutOn fires.
   assets.rubBank -= remaining;
 }
 
@@ -41,9 +43,10 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
   const totalDays = Math.max(0, Math.floor((voyage.getTime() - start.getTime()) / MS_PER_DAY) + 1);
 
   if (totalDays === 0) {
+    const investmentTotal = inputs.investments.reduce((s, i) => s + i.amountRub, 0);
     return {
       days: [],
-      balanceAtVoyage: totalRub(inputs.assets, inputs.rubPerUsd, 0),
+      balanceAtVoyage: totalRub(inputs.assets, inputs.rubPerUsd, investmentTotal),
       runsOutOn: null,
       daysOfRunway: 0,
       totalSpentRub: 0,
@@ -54,7 +57,6 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
   const assets: AssetMix = { ...inputs.assets };
   // Per-investment mutable balances
   const investmentBalances: number[] = inputs.investments.map(i => i.amountRub);
-  const investmentTotalStart = investmentBalances.reduce((a, b) => a + b, 0);
 
   let totalSpent = 0;
   let totalYield = 0;
@@ -134,8 +136,6 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
   const daysOfRunway = runsOutOn
     ? days.findIndex(d => d.date === runsOutOn)
     : totalDays - 1;
-
-  void investmentTotalStart;  // reference to silence unused-var lint if any
 
   return {
     days,

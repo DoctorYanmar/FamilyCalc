@@ -27,8 +27,8 @@ describe('simulate — monthly expenses', () => {
     };
     const result = simulate(inputs, new Date('2026-05-01'));
     // 31 days * (30000 / 30.4375) ≈ 30,554
-    expect(result.totalSpentRub).toBeCloseTo(30_554, -1);
-    expect(result.balanceAtVoyage).toBeCloseTo(1_000_000 - 30_554, -1);
+    expect(result.totalSpentRub).toBeCloseTo(30_554, 0);
+    expect(result.balanceAtVoyage).toBeCloseTo(1_000_000 - 30_554, 0);
   });
 });
 
@@ -246,5 +246,63 @@ describe('simulate — edge cases', () => {
     };
     const result = simulate(inputs, new Date('2026-05-01'));
     expect(result.balanceAtVoyage).toBe(1_000_000);
+  });
+});
+
+describe('simulate — runsOutOn and daysOfRunway', () => {
+  it('reports daysOfRunway = totalDays - 1 when money survives the whole window', () => {
+    const inputs: Inputs = {
+      returnDate: '2026-05-01',
+      voyageDate: '2026-05-10',         // 10 days inclusive
+      salaryLumpSumUsd: 0,
+      assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
+      rubPerUsd: 90,
+      monthlyFamilyRub: 0,
+      goals: [],
+      investments: [],
+    };
+    const result = simulate(inputs, new Date('2026-05-01'));
+    expect(result.runsOutOn).toBeNull();
+    expect(result.daysOfRunway).toBe(9);  // 10 inclusive days = 9 days of "runway after today"
+  });
+
+  it('detects runsOutOn on a specific day when assets are insufficient', () => {
+    const inputs: Inputs = {
+      returnDate: '2026-05-01',
+      voyageDate: '2026-05-31',
+      salaryLumpSumUsd: 0,
+      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      rubPerUsd: 90,
+      monthlyFamilyRub: 0,
+      goals: [{
+        id: 'g1', name: 'Big', amountRub: 200_000,
+        mode: 'lump', date: '2026-05-15', enabled: true,
+      }],
+      investments: [],
+    };
+    const result = simulate(inputs, new Date('2026-05-01'));
+    expect(result.runsOutOn).toBe('2026-05-15');
+    // 2026-05-15 is index 14 in the days array
+    expect(result.daysOfRunway).toBe(14);
+  });
+
+  it('balanceAtVoyage includes investment value when voyage is in the past', () => {
+    const inputs: Inputs = {
+      returnDate: '2025-01-01',
+      voyageDate: '2025-06-01',     // voyage already past relative to today below
+      salaryLumpSumUsd: 0,
+      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      rubPerUsd: 90,
+      monthlyFamilyRub: 0,
+      goals: [],
+      investments: [{
+        id: 'i1', kind: 'ofz', name: 'OFZ',
+        amountRub: 500_000, annualRatePct: 12, reinvest: true,
+      }],
+    };
+    const result = simulate(inputs, new Date('2026-05-01'));
+    expect(result.days).toHaveLength(0);
+    // 100k cash + 500k investment principal = 600k total
+    expect(result.balanceAtVoyage).toBe(600_000);
   });
 });
