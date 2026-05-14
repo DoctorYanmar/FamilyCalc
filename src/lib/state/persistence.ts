@@ -66,10 +66,15 @@ export function saveState(s: AppState): void {
   }
 }
 
+/** Serialise the full AppState to a pretty-printed JSON string for download/backup. */
 export function exportJson(s: AppState): string {
   return JSON.stringify(s, null, 2);
 }
 
+/**
+ * Parse a JSON backup string back into AppState.
+ * Throws if the JSON is invalid or the schemaVersion is not supported.
+ */
 export function importJson(json: string): AppState {
   const parsed = JSON.parse(json);
   return migrate(parsed);
