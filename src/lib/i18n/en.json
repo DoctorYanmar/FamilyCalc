@@ -40,6 +40,13 @@
   "expenses.daily": "Daily rate",
   "expenses.dailyHint": "computed",
 
+  "summary.title": "Scenario summary",
+  "summary.meta": "read-only",
+  "summary.daysToVoyage": "Days to voyage",
+  "summary.totalAssetsRub": "Total RUB-equiv assets",
+  "summary.outflowWindow": "Outflow window",
+  "summary.netAtVoyage": "Net at voyage",
+
   "goals.title": "Goals",
   "goals.add": "+ Add goal",
   "goals.name": "Name",

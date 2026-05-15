@@ -40,6 +40,13 @@
   "expenses.daily": "Дневная норма",
   "expenses.dailyHint": "расчётно",
 
+  "summary.title": "Сводка",
+  "summary.meta": "только чтение",
+  "summary.daysToVoyage": "Дней до рейса",
+  "summary.totalAssetsRub": "Активы в ₽-экв.",
+  "summary.outflowWindow": "Отток в окне",
+  "summary.netAtVoyage": "Чисто на дату",
+
   "goals.title": "Цели",
   "goals.add": "+ Добавить цель",
   "goals.name": "Название",
