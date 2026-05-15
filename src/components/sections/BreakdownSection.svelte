@@ -2,7 +2,6 @@
   import { _ } from 'svelte-i18n';
   import { app } from '../../lib/state/scenarios.svelte';
   import { currentResult } from '../../lib/state/derived';
-  import CollapsibleCard from '../controls/CollapsibleCard.svelte';
   import { formatRub } from '../../lib/format';
   import type { DayPoint } from '../../lib/calc/types';
 
@@ -25,34 +24,33 @@
   });
 </script>
 
-<CollapsibleCard title={$_('breakdown.title')}>
-  <table>
-    <thead>
-      <tr>
-        <th>{$_('breakdown.month')}</th>
-        <th>{$_('breakdown.open')}</th>
-        <th>{$_('breakdown.spent')}</th>
-        <th>{$_('breakdown.goals')}</th>
-        <th>{$_('breakdown.close')}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each rows as r}
+<section class="card breakdown">
+  <div class="card-head">
+    <div class="card-title">{$_('breakdown.title')}</div>
+    <div class="card-meta">{rows.length}</div>
+  </div>
+  <div class="breakdown-scroll">
+    <table>
+      <thead>
         <tr>
-          <td>{r.ym}</td>
-          <td class="number">{formatRub(r.open, app.ui.language)}</td>
-          <td class="number">{formatRub(r.spent, app.ui.language)}</td>
-          <td class="number">{formatRub(r.goalsRub, app.ui.language)}</td>
-          <td class="number">{formatRub(r.close, app.ui.language)}</td>
+          <th>{$_('breakdown.month')}</th>
+          <th style="text-align:right">{$_('breakdown.open')}</th>
+          <th style="text-align:right">{$_('breakdown.spent')}</th>
+          <th style="text-align:right">{$_('breakdown.goals')}</th>
+          <th style="text-align:right">{$_('breakdown.close')}</th>
         </tr>
-      {/each}
-    </tbody>
-  </table>
-</CollapsibleCard>
-
-<style>
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th, td { text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--border); }
-  th:first-child, td:first-child { text-align: left; }
-  th { color: var(--muted); font-weight: 500; }
-</style>
+      </thead>
+      <tbody>
+        {#each rows as r}
+          <tr>
+            <td class="label">{r.ym}</td>
+            <td class="amount">{formatRub(r.open, app.ui.language)}</td>
+            <td class="amount">{formatRub(r.spent, app.ui.language)}</td>
+            <td class="amount">{formatRub(r.goalsRub, app.ui.language)}</td>
+            <td class="amount" style={r.close < 0 ? 'color:var(--danger)' : ''}>{formatRub(r.close, app.ui.language)}</td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </div>
+</section>
