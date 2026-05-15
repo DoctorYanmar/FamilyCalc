@@ -1,18 +1,13 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
+  import { currentResult } from '../../../lib/state/derived';
+
+  const result = $derived(currentResult());
+  const visible = $derived(result.alloc.asvWarningLayers.length > 0);
 </script>
 
-<div class="warn">
-  ⚠ {$_('savings.asvWarning')}
-</div>
-
-<style>
-  .warn {
-    border: 1px solid var(--danger);
-    background: rgba(255, 90, 90, 0.06);
-    color: var(--danger);
-    padding: var(--gap-1) var(--gap-2);
-    font-size: var(--t-mini);
-    letter-spacing: 0.06em;
-  }
-</style>
+{#if visible}
+  <div class="report-notice danger">
+    ⚠ {$_('savings.asvWarning')}
+  </div>
+{/if}
