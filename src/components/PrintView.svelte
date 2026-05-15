@@ -73,7 +73,7 @@
           <li>
             {inv.name || $_(`investments.kind.${inv.kind}`)}:
             {formatRub(inv.amountRub, lang)} @ {inv.annualRatePct}%
-            {#if inv.reinvest}(reinvest){/if}
+            {#if inv.reinvest}({$_('investments.reinvest')}){/if}
           </li>
         {/each}
       </ul>

@@ -240,6 +240,7 @@ a { color: var(--amber); }
 
 /* --- Print toggle --- */
 .print-only { display: none; }
+.print-view { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
