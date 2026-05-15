@@ -140,5 +140,20 @@
   "scenario.duplicatePrompt": "New scenario name:",
   "scenario.delete": "Delete",
   "scenario.deleteConfirm": "Delete scenario \"{name}\"?",
-  "scenario.cannotDeleteLast": "Cannot delete the only scenario."
+  "scenario.cannotDeleteLast": "Cannot delete the only scenario.",
+
+  "status.onTrack": "On track",
+  "status.offTrack": "Drains before voyage",
+  "status.daysFromNow": "{n} days from now",
+  "status.highRateRegime": "High-rate regime",
+  "status.moderateRegime": "Moderate regime",
+  "status.lowRateRegime": "Low-rate regime",
+  "status.cbrLabel": "CBR",
+  "kpis.balanceAtVoyage": "Balance at voyage",
+  "kpis.onDate": "on",
+  "kpis.runway": "Runway",
+  "kpis.drainsOn": "drains",
+  "kpis.notDraining": "covered through voyage",
+  "kpis.monthlyExpenses": "Monthly expenses",
+  "kpis.perMonth": "family budget"
 }

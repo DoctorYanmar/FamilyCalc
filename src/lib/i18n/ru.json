@@ -140,5 +140,20 @@
   "scenario.duplicatePrompt": "Имя нового сценария:",
   "scenario.delete": "Удалить",
   "scenario.deleteConfirm": "Удалить сценарий «{name}»?",
-  "scenario.cannotDeleteLast": "Нельзя удалить единственный сценарий."
+  "scenario.cannotDeleteLast": "Нельзя удалить единственный сценарий.",
+
+  "status.onTrack": "По плану",
+  "status.offTrack": "Не хватает",
+  "status.daysFromNow": "{n} дн. до рейса",
+  "status.highRateRegime": "Высокие ставки",
+  "status.moderateRegime": "Умеренные ставки",
+  "status.lowRateRegime": "Низкие ставки",
+  "status.cbrLabel": "КС",
+  "kpis.balanceAtVoyage": "Остаток на дату",
+  "kpis.onDate": "на",
+  "kpis.runway": "Запас",
+  "kpis.drainsOn": "исчерпан",
+  "kpis.notDraining": "хватит до рейса",
+  "kpis.monthlyExpenses": "Расходы",
+  "kpis.perMonth": "семья / мес"
 }
