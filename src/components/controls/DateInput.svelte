@@ -1,22 +1,18 @@
 <script lang="ts">
   type Props = {
     label: string;
-    hint?: string;
     value: string;
-    onChange: (iso: string) => void;
+    onChange: (v: string) => void;
+    hint?: string;
   };
-  let { label, hint, value, onChange }: Props = $props();
-
-  function handle(e: Event) {
-    const target = e.target as HTMLInputElement;
-    if (target.value) onChange(target.value);
-  }
+  let { label, value, onChange, hint }: Props = $props();
 </script>
 
 <label class="field">
-  <span>
-    <span class="field-key">{label}</span>
-    {#if hint}<span class="field-hint">{hint}</span>{/if}
+  <span class="field-key">
+    {label}
+    {#if hint}<span class="hint">{hint}</span>{/if}
   </span>
-  <input class="input date" type="date" value={value} oninput={handle} />
+  <input class="input date" type="date" value={value}
+         oninput={(e) => onChange((e.target as HTMLInputElement).value)} />
 </label>

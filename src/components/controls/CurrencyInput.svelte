@@ -1,34 +1,32 @@
 <script lang="ts">
   type Props = {
     label: string;
-    hint?: string;
     value: number;
-    onChange: (n: number) => void;
+    onChange: (v: number) => void;
     suffix?: string;
+    hint?: string;
     placeholder?: string;
   };
-  let { label, hint, value, onChange, suffix = '', placeholder }: Props = $props();
+  let { label, value, onChange, suffix, hint, placeholder = '0' }: Props = $props();
 
-  function handle(e: Event) {
-    const target = e.target as HTMLInputElement;
-    const n = Number(target.value.replace(/\s/g, ''));
+  function onInput(e: Event) {
+    const raw = (e.target as HTMLInputElement).value;
+    const n = Number(raw);
     if (!Number.isNaN(n) && n >= 0) onChange(n);
   }
 </script>
 
 <label class="field">
-  <span>
-    <span class="field-key">{label}{#if suffix} · {suffix}{/if}</span>
-    {#if hint}<span class="field-hint">{hint}</span>{/if}
+  <span class="field-key">
+    {label}
+    {#if hint}<span class="hint">{hint}</span>{/if}
   </span>
-  <input
-    class="input"
-    type="number"
-    inputmode="decimal"
-    min="0"
-    step="any"
-    {placeholder}
-    value={value === 0 ? '' : value}
-    oninput={handle}
-  />
+  <span class="input-wrap">
+    <input class="input{suffix ? ' with-suffix' : ''}"
+           type="number" inputmode="decimal" min="0" step="any"
+           value={value === 0 ? '' : value}
+           {placeholder}
+           oninput={onInput} />
+    {#if suffix}<span class="suffix">{suffix}</span>{/if}
+  </span>
 </label>
