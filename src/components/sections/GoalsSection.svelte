@@ -23,7 +23,7 @@
   }
 
   function removeGoal(id: string) {
-    if (!confirm(get(_)('goals.delete') + '?')) return;
+    if (!confirm(get(_)('goals.deleteConfirm'))) return;
     inputs.goals = inputs.goals.filter(g => g.id !== id);
     persistSoon();
   }
@@ -33,13 +33,15 @@
     persistSoon();
   }
 
-  const cols = 'minmax(110px, 1fr) 96px 104px 116px 116px 32px 32px';
-  const gap = '6px';
+  const enabledCount = $derived(inputs.goals.filter(g => g.enabled).length);
 </script>
 
-<CollapsibleCard title={$_('goals.title')}>
-  <div class="field-multi-list" style="--multi-cols: {cols}; --multi-gap: {gap};">
-    <div class="field-multi-head">
+<CollapsibleCard
+  title={$_('goals.title')}
+  meta={$_('goals.meta', { values: { total: inputs.goals.length, enabled: enabledCount } })}
+>
+  <div class="goals-list">
+    <div class="goals-row header">
       <span>{$_('goals.name')}</span>
       <span>{$_('goals.amount')}</span>
       <span>{$_('goals.mode')}</span>
@@ -50,36 +52,47 @@
     </div>
 
     {#each inputs.goals as g (g.id)}
-      <div class="field-multi-row" class:disabled={!g.enabled}>
-        <input class="input text" type="text"
+      <div class="goals-row" class:disabled={!g.enabled}>
+        <input class="input text cell-name" type="text"
                placeholder={$_('goals.name')}
                value={g.name}
                oninput={(e) => updateGoal(g.id, { name: (e.target as HTMLInputElement).value })} />
-        <input class="input" type="number" inputmode="decimal" min="0" step="any"
+        <input class="input amount cell-amount" type="number" inputmode="decimal" min="0" step="any"
                placeholder="0"
                value={g.amountRub === 0 ? '' : g.amountRub}
                oninput={(e) => updateGoal(g.id, { amountRub: Number((e.target as HTMLInputElement).value) || 0 })} />
-        <select class="select" value={g.mode}
+        <select class="select cell-mode" value={g.mode}
                 onchange={(e) => updateGoal(g.id, { mode: (e.target as HTMLSelectElement).value as GoalMode })}>
           <option value="lump">{$_('goals.mode.lump')}</option>
           <option value="spread">{$_('goals.mode.spread')}</option>
         </select>
-        <input class="input date" type="date" value={g.date}
+        <input class="input date cell-date" type="date" value={g.date}
                oninput={(e) => updateGoal(g.id, { date: (e.target as HTMLInputElement).value })} />
         {#if g.mode === 'spread'}
-          <input class="input date" type="date" value={g.endDate ?? g.date}
+          <input class="input date cell-end" type="date" value={g.endDate ?? g.date}
                  oninput={(e) => updateGoal(g.id, { endDate: (e.target as HTMLInputElement).value })} />
         {:else}
-          <span class="cell-empty" aria-hidden="true">—</span>
+          <span class="cell-end cell-empty" aria-hidden="true">—</span>
         {/if}
-        <input class="row-check" type="checkbox" checked={g.enabled}
-               onchange={(e) => updateGoal(g.id, { enabled: (e.target as HTMLInputElement).checked })}
-               aria-label={$_('goals.enabled')}
-               title={$_('goals.enabled')} />
-        <button class="btn icon danger row-del" type="button"
+        <div class="cell-toggle">
+          <div
+            class="toggle-cb"
+            class:on={g.enabled}
+            role="switch"
+            aria-checked={g.enabled}
+            tabindex="0"
+            onclick={() => updateGoal(g.id, { enabled: !g.enabled })}
+            onkeydown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); updateGoal(g.id, { enabled: !g.enabled }); } }}
+            aria-label={$_('goals.enabled')}
+            title={$_('goals.enabled')}
+          ></div>
+        </div>
+        <button class="icon-btn danger cell-delete" type="button"
                 onclick={() => removeGoal(g.id)}
                 aria-label={$_('goals.delete')}
-                title={$_('goals.delete')}>×</button>
+                title={$_('goals.delete')}>
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
     {/each}
   </div>
@@ -88,32 +101,9 @@
 
 <style>
   .cell-empty {
-    color: var(--label);
+    color: var(--fg-4);
     text-align: center;
-    font-size: var(--t-mini);
-  }
-  .row-check {
-    accent-color: var(--amber);
-    width: 18px;
-    height: 18px;
-    margin: 0;
-    justify-self: center;
-  }
-  .row-del { padding: 4px 6px; justify-self: end; }
-
-  /* Compact on narrow viewports: stack into 2 grid columns instead of 7.
-     Keeps rows visually grouped by border-bottom dashed line. */
-  @media (max-width: 640px) {
-    .field-multi-list :global(.field-multi-head) { display: none; }
-    .field-multi-list :global(.field-multi-row) {
-      grid-template-columns: 1fr auto !important;
-      row-gap: var(--gap-1);
-    }
-    .field-multi-list :global(.field-multi-row > *) { grid-column: 1 / -1; }
-    .field-multi-list :global(.field-multi-row > .row-check),
-    .field-multi-list :global(.field-multi-row > .row-del) {
-      grid-column: 2;
-      grid-row: 1;
-    }
+    font-size: var(--t-small);
+    align-self: center;
   }
 </style>

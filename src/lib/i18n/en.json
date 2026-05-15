@@ -59,6 +59,8 @@
   "goals.delete": "Delete",
   "goals.enabled": "Enabled",
   "goals.outsideWindow": "Date outside leave window",
+  "goals.meta": "{total} items · {enabled} enabled",
+  "goals.deleteConfirm": "Delete this goal?",
 
   "savings.title": "Savings",
   "savings.inputs.title": "Savings parameters",

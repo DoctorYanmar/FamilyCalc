@@ -59,6 +59,8 @@
   "goals.delete": "Удалить",
   "goals.enabled": "Учитывать",
   "goals.outsideWindow": "Дата вне периода отпуска",
+  "goals.meta": "{total} целей · {enabled} активно",
+  "goals.deleteConfirm": "Удалить эту цель?",
 
   "savings.title": "Сбережения",
   "savings.inputs.title": "Параметры сбережений",
