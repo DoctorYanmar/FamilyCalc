@@ -20,22 +20,22 @@ export type Goal = {
   enabled: boolean;
 };
 
-export type InstrumentKind =
-  | 'vkladRub'
-  | 'ofz'
-  | 'corpBond'
-  | 'stock'
-  | 'longBond'
-  | 'custom';
+export type Regime = 'high' | 'moderate' | 'low';
+export type LayerKey = 'A' | 'B' | 'C';
+export type Liquidity = 'daily' | 'fixed-term' | 'secondary-market';
+export type ClassCurrency = 'RUB' | 'USD-settled' | 'CNY' | 'Gold';
 
-export type Investment = {
-  id: ID;
-  kind: InstrumentKind;
-  name: string;
-  amountRub: number;
-  annualRatePct: number;
-  reinvest: boolean;
+export type InstrumentClass = {
+  id: string;
+  liquidity: Liquidity;
+  cbrOffset: { low: number; high: number };
+  currency: ClassCurrency;
+  isDeposit: boolean;
+  applicableLayers: LayerKey[];
+  applicableRegimes: Regime[];
 };
+
+export type LayerOverride = { A?: number; B?: number; C?: number };
 
 export type Inputs = {
   returnDate: ISODate;
@@ -45,7 +45,13 @@ export type Inputs = {
   rubPerUsd: number;
   monthlyFamilyRub: number;
   goals: Goal[];
-  investments: Investment[];
+  // savings framework
+  freeCashRub: number;
+  horizonDate: ISODate;
+  cbrKeyRatePct: number;
+  cbrRateUpdatedAt: ISODate;
+  layerOverride: LayerOverride;
+  includeExpectedYield: boolean;
 };
 
 export type GoalEvent = {
@@ -59,7 +65,6 @@ export type DayPoint = {
   totalRub: number;
   assetsRub: AssetMix;
   events: GoalEvent[];
-  investmentValueRub: number;
 };
 
 export type SimulationResult = {
@@ -68,7 +73,29 @@ export type SimulationResult = {
   runsOutOn: ISODate | null;
   daysOfRunway: number;
   totalSpentRub: number;
-  totalInvestmentYieldRub: number;
+};
+
+export type LayerInfo = {
+  amountRub: number;
+  timeDays: number;
+  candidates: InstrumentClass[];
+  incomeRangeRub: { low: number; high: number };
+  incomeMidRub: number;
+};
+
+export type AllocationResult = {
+  regime: Regime;
+  horizonDays: number;
+  layers: { A: LayerInfo; B: LayerInfo; C: LayerInfo };
+  taxThresholdRub: number;
+  asvWarningLayers: LayerKey[];
+};
+
+export type CombinedResult = {
+  sim: SimulationResult;
+  alloc: AllocationResult;
+  balanceAtVoyage: number;
+  expectedYieldMid: number;
 };
 
 export type Scenario = {
@@ -83,7 +110,7 @@ export type Language = 'ru' | 'en';
 export type Theme = 'dark' | 'light';
 
 export type AppState = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   activeScenarioId: ID;
   scenarios: Record<ID, Scenario>;
   ui: {

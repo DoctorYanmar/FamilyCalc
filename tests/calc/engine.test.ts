@@ -4,29 +4,28 @@ import type { Inputs } from '../../src/lib/calc/types';
 
 const emptyInputs = (): Inputs => ({
   returnDate: '2026-05-01',
-  voyageDate: '2026-05-03',  // 3-day window
+  voyageDate: '2026-05-03',
   salaryLumpSumUsd: 0,
   assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
   rubPerUsd: 90,
   monthlyFamilyRub: 0,
   goals: [],
-  investments: [],
+  freeCashRub: 0,
+  horizonDate: '2026-05-03',
+  cbrKeyRatePct: 16,
+  cbrRateUpdatedAt: '2026-05-01',
+  layerOverride: {},
+  includeExpectedYield: false,
 });
 
 describe('simulate — monthly expenses', () => {
   it('drains rubBank by daily prorated amount', () => {
-    const inputs: Inputs = {
-      returnDate: '2026-05-01',
+    const inputs: Inputs = { ...emptyInputs(),
       voyageDate: '2026-05-31',
-      salaryLumpSumUsd: 0,
       assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
-      rubPerUsd: 90,
       monthlyFamilyRub: 30_000,
-      goals: [],
-      investments: [],
     };
     const result = simulate(inputs, new Date('2026-05-01'));
-    // 31 days * (30000 / 30.4375) ≈ 30,554
     expect(result.totalSpentRub).toBeCloseTo(30_554, 0);
     expect(result.balanceAtVoyage).toBeCloseTo(1_000_000 - 30_554, 0);
   });
@@ -34,18 +33,13 @@ describe('simulate — monthly expenses', () => {
 
 describe('simulate — lump goals', () => {
   it('subtracts the goal amount on the exact date and records the event', () => {
-    const inputs: Inputs = {
-      returnDate: '2026-05-01',
+    const inputs: Inputs = { ...emptyInputs(),
       voyageDate: '2026-05-10',
-      salaryLumpSumUsd: 0,
       assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
-      rubPerUsd: 90,
-      monthlyFamilyRub: 0,
       goals: [{
         id: 'g1', name: 'Car', amountRub: 500_000,
         mode: 'lump', date: '2026-05-05', enabled: true,
       }],
-      investments: [],
     };
     const result = simulate(inputs, new Date('2026-05-01'));
     const dayBefore = result.days.find(d => d.date === '2026-05-04')!;
@@ -57,18 +51,13 @@ describe('simulate — lump goals', () => {
   });
 
   it('ignores disabled lump goal', () => {
-    const inputs: Inputs = {
-      returnDate: '2026-05-01',
+    const inputs: Inputs = { ...emptyInputs(),
       voyageDate: '2026-05-10',
-      salaryLumpSumUsd: 0,
       assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
-      rubPerUsd: 90,
-      monthlyFamilyRub: 0,
       goals: [{
         id: 'g1', name: 'Car', amountRub: 500_000,
         mode: 'lump', date: '2026-05-05', enabled: false,
       }],
-      investments: [],
     };
     const result = simulate(inputs, new Date('2026-05-01'));
     expect(result.balanceAtVoyage).toBe(1_000_000);
@@ -95,19 +84,13 @@ describe('simulate — baseline', () => {
 
 describe('simulate — spread goals', () => {
   it('spreads amount evenly across the range, total within 1 RUB', () => {
-    const inputs: Inputs = {
-      returnDate: '2026-05-01',
+    const inputs: Inputs = { ...emptyInputs(),
       voyageDate: '2026-05-10',
-      salaryLumpSumUsd: 0,
       assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
-      rubPerUsd: 90,
-      monthlyFamilyRub: 0,
       goals: [{
         id: 'g1', name: 'Repairs', amountRub: 100_000,
-        mode: 'spread', date: '2026-05-03', endDate: '2026-05-07',
-        enabled: true,
+        mode: 'spread', date: '2026-05-03', endDate: '2026-05-07', enabled: true,
       }],
-      investments: [],
     };
     const result = simulate(inputs, new Date('2026-05-01'));
     expect(result.totalSpentRub).toBeCloseTo(100_000, 0);
@@ -117,44 +100,32 @@ describe('simulate — spread goals', () => {
 
 describe('simulate — drain order', () => {
   it('drains RUB bank first, then USD bank, then USD cash', () => {
-    const inputs: Inputs = {
-      returnDate: '2026-05-01',
+    const inputs: Inputs = { ...emptyInputs(),
       voyageDate: '2026-05-04',
-      salaryLumpSumUsd: 0,
       assets: { usdBank: 100, usdCash: 200, rubBank: 500 },
       rubPerUsd: 100,
-      monthlyFamilyRub: 0,
       goals: [{
         id: 'g1', name: 'Big buy', amountRub: 10_000,
         mode: 'lump', date: '2026-05-03', enabled: true,
       }],
-      investments: [],
     };
     const result = simulate(inputs, new Date('2026-05-01'));
     const after = result.days.find(d => d.date === '2026-05-03')!;
-    // 500 RUB drained first, then 9500/100 = 95 USD from usdBank, leaving 5 USD bank
-    // and 200 cash untouched (since we still had USD bank)
-    // wait: 500 RUB + 100 USD bank * 100 rate = 500 + 10000 = 10500 RUB capacity from bank alone
-    // After 500 RUB and 95 USD bank drained: rubBank=0, usdBank=5, usdCash=200
     expect(after.assetsRub.rubBank).toBeCloseTo(0, 4);
     expect(after.assetsRub.usdBank).toBeCloseTo(5, 4);
     expect(after.assetsRub.usdCash).toBeCloseTo(200, 4);
   });
 
   it('cascades to USD cash when USD bank runs out', () => {
-    const inputs: Inputs = {
-      returnDate: '2026-05-01',
+    const inputs: Inputs = { ...emptyInputs(),
       voyageDate: '2026-05-04',
-      salaryLumpSumUsd: 0,
       assets: { usdBank: 50, usdCash: 100, rubBank: 100 },
       rubPerUsd: 100,
-      monthlyFamilyRub: 0,
       goals: [{
         id: 'g1', name: 'Spend',
-        amountRub: 100 + 50 * 100 + 30 * 100, // 100 RUB + all USD bank + 30 USD cash worth
+        amountRub: 100 + 50 * 100 + 30 * 100,
         mode: 'lump', date: '2026-05-02', enabled: true,
       }],
-      investments: [],
     };
     const result = simulate(inputs, new Date('2026-05-01'));
     const after = result.days.find(d => d.date === '2026-05-02')!;
@@ -164,65 +135,12 @@ describe('simulate — drain order', () => {
   });
 });
 
-describe('simulate — investments reinvest', () => {
-  it('compounds investment principal daily when reinvest=true', () => {
-    const inputs: Inputs = {
-      returnDate: '2026-05-01',
-      voyageDate: '2027-05-01',  // ~365 days
-      salaryLumpSumUsd: 0,
-      assets: { usdBank: 0, usdCash: 0, rubBank: 0 },
-      rubPerUsd: 90,
-      monthlyFamilyRub: 0,
-      goals: [],
-      investments: [{
-        id: 'i1', kind: 'ofz', name: 'OFZ',
-        amountRub: 1_000_000, annualRatePct: 12, reinvest: true,
-      }],
-    };
-    const result = simulate(inputs, new Date('2026-05-01'));
-    // After 365 daily compounding cycles at annual 12%: final ≈ 1,000,000 * 1.12 = 1,120,000
-    expect(result.balanceAtVoyage).toBeGreaterThan(1_115_000);
-    expect(result.balanceAtVoyage).toBeLessThan(1_125_000);
-    expect(result.totalInvestmentYieldRub).toBeGreaterThan(115_000);
-  });
-});
-
-describe('simulate — investments payout', () => {
-  it('with reinvest=false credits interest to rubBank, principal unchanged', () => {
-    const inputs: Inputs = {
-      returnDate: '2026-05-01',
-      voyageDate: '2027-05-01',
-      salaryLumpSumUsd: 0,
-      assets: { usdBank: 0, usdCash: 0, rubBank: 0 },
-      rubPerUsd: 90,
-      monthlyFamilyRub: 0,
-      goals: [],
-      investments: [{
-        id: 'i1', kind: 'vkladRub', name: 'Vklad',
-        amountRub: 1_000_000, annualRatePct: 12, reinvest: false,
-      }],
-    };
-    const result = simulate(inputs, new Date('2026-05-01'));
-    // Principal stays 1,000,000; ~117k yield accumulates in rubBank (daily simple-payout
-    // accumulates slightly less than compounding ≈ 117k vs ~120k)
-    const finalDay = result.days[result.days.length - 1];
-    expect(finalDay.investmentValueRub).toBeCloseTo(1_000_000, 0);
-    expect(finalDay.assetsRub.rubBank).toBeGreaterThan(110_000);
-    expect(finalDay.assetsRub.rubBank).toBeLessThan(125_000);
-  });
-});
-
 describe('simulate — edge cases', () => {
   it('voyage in the past returns empty days and current total', () => {
-    const inputs: Inputs = {
+    const inputs: Inputs = { ...emptyInputs(),
       returnDate: '2026-01-01',
       voyageDate: '2026-04-01',
-      salaryLumpSumUsd: 0,
       assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
-      rubPerUsd: 90,
-      monthlyFamilyRub: 0,
-      goals: [],
-      investments: [],
     };
     const result = simulate(inputs, new Date('2026-05-01'));
     expect(result.days).toHaveLength(0);
@@ -231,78 +149,55 @@ describe('simulate — edge cases', () => {
   });
 
   it('ignores goal outside leave window', () => {
-    const inputs: Inputs = {
-      returnDate: '2026-05-01',
+    const inputs: Inputs = { ...emptyInputs(),
       voyageDate: '2026-05-10',
-      salaryLumpSumUsd: 0,
       assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
-      rubPerUsd: 90,
-      monthlyFamilyRub: 0,
       goals: [{
         id: 'g1', name: 'Way later', amountRub: 999_000,
         mode: 'lump', date: '2027-01-01', enabled: true,
       }],
-      investments: [],
     };
     const result = simulate(inputs, new Date('2026-05-01'));
     expect(result.balanceAtVoyage).toBe(1_000_000);
+  });
+
+  it('ignores savings-framework fields (they do not affect cash drain)', () => {
+    const base = simulate(emptyInputs(), new Date('2026-05-01'));
+    const withSavingsNoise = simulate({
+      ...emptyInputs(),
+      freeCashRub: 999_999_999,
+      cbrKeyRatePct: 25,
+      horizonDate: '2099-01-01',
+      layerOverride: { A: 1_000_000, B: 1_000_000, C: 1_000_000 },
+      includeExpectedYield: true,
+    }, new Date('2026-05-01'));
+    expect(withSavingsNoise.balanceAtVoyage).toBe(base.balanceAtVoyage);
+    expect(withSavingsNoise.totalSpentRub).toBe(base.totalSpentRub);
   });
 });
 
 describe('simulate — runsOutOn and daysOfRunway', () => {
   it('reports daysOfRunway = totalDays - 1 when money survives the whole window', () => {
-    const inputs: Inputs = {
-      returnDate: '2026-05-01',
-      voyageDate: '2026-05-10',         // 10 days inclusive
-      salaryLumpSumUsd: 0,
+    const inputs: Inputs = { ...emptyInputs(),
+      voyageDate: '2026-05-10',
       assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
-      rubPerUsd: 90,
-      monthlyFamilyRub: 0,
-      goals: [],
-      investments: [],
     };
     const result = simulate(inputs, new Date('2026-05-01'));
     expect(result.runsOutOn).toBeNull();
-    expect(result.daysOfRunway).toBe(9);  // 10 inclusive days = 9 days of "runway after today"
+    expect(result.daysOfRunway).toBe(9);
   });
 
   it('detects runsOutOn on a specific day when assets are insufficient', () => {
-    const inputs: Inputs = {
-      returnDate: '2026-05-01',
+    const inputs: Inputs = { ...emptyInputs(),
       voyageDate: '2026-05-31',
-      salaryLumpSumUsd: 0,
       assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
-      rubPerUsd: 90,
-      monthlyFamilyRub: 0,
       goals: [{
         id: 'g1', name: 'Big', amountRub: 200_000,
         mode: 'lump', date: '2026-05-15', enabled: true,
       }],
-      investments: [],
     };
     const result = simulate(inputs, new Date('2026-05-01'));
     expect(result.runsOutOn).toBe('2026-05-15');
-    // 2026-05-15 is index 14 in the days array
     expect(result.daysOfRunway).toBe(14);
-  });
-
-  it('balanceAtVoyage includes investment value when voyage is in the past', () => {
-    const inputs: Inputs = {
-      returnDate: '2025-01-01',
-      voyageDate: '2025-06-01',     // voyage already past relative to today below
-      salaryLumpSumUsd: 0,
-      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
-      rubPerUsd: 90,
-      monthlyFamilyRub: 0,
-      goals: [],
-      investments: [{
-        id: 'i1', kind: 'ofz', name: 'OFZ',
-        amountRub: 500_000, annualRatePct: 12, reinvest: true,
-      }],
-    };
-    const result = simulate(inputs, new Date('2026-05-01'));
-    expect(result.days).toHaveLength(0);
-    // 100k cash + 500k investment principal = 600k total
-    expect(result.balanceAtVoyage).toBe(600_000);
   });
 });

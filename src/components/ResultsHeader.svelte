@@ -13,8 +13,8 @@
 
   const usdEquiv = $derived(result.balanceAtVoyage / inputs.rubPerUsd);
   const burnPerDay = $derived(
-    result.days.length > 1
-      ? (result.days[0].totalRub - result.balanceAtVoyage) / Math.max(1, result.daysOfRunway)
+    result.sim.days.length > 1
+      ? (result.sim.days[0].totalRub - result.sim.balanceAtVoyage) / Math.max(1, result.sim.daysOfRunway)
       : 0
   );
 </script>
@@ -34,8 +34,8 @@
       <div class="kpi-sub">
         ≈ {formatUsd(usdEquiv, app.ui.language)} @ {inputs.rubPerUsd} ₽/$
         <span class="sep">·</span>
-        {#if result.runsOutOn}
-          <span class="danger">{$_('results.runsOut').toLowerCase()}: {formatDate(result.runsOutOn, app.ui.language)}</span>
+        {#if result.sim.runsOutOn}
+          <span class="danger">{$_('results.runsOut').toLowerCase()}: {formatDate(result.sim.runsOutOn, app.ui.language)}</span>
         {:else}
           <span class="ok">{$_('results.ok').toLowerCase()}</span>
         {/if}
@@ -46,7 +46,7 @@
       <div class="stat-row">
         <span class="stat-key">{$_('results.runway')}</span>
         <span class="stat-dots"></span>
-        <span class="number">{$_('results.daysUnit', { values: { n: result.daysOfRunway } })}</span>
+        <span class="number">{$_('results.daysUnit', { values: { n: result.sim.daysOfRunway } })}</span>
       </div>
       <div class="stat-row">
         <span class="stat-key">{$_('results.burnPerDay')}</span>
@@ -56,12 +56,12 @@
       <div class="stat-row">
         <span class="stat-key">{$_('results.yield')}</span>
         <span class="stat-dots"></span>
-        <span class="number ok">+ {formatRub(result.totalInvestmentYieldRub, app.ui.language)}</span>
+        <span class="number ok">+ {formatRub(result.expectedYieldMid, app.ui.language)}</span>
       </div>
       <div class="stat-row">
         <span class="stat-key">{$_('results.spent')}</span>
         <span class="stat-dots"></span>
-        <span class="number">{formatRub(result.totalSpentRub, app.ui.language)}</span>
+        <span class="number">{formatRub(result.sim.totalSpentRub, app.ui.language)}</span>
       </div>
     </div>
   </div>
@@ -88,78 +88,20 @@
   }
   .frame-top { margin-bottom: var(--gap-4); }
   .frame-bot { margin-top: var(--gap-4); }
-
-  .grid {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr;
-    gap: var(--gap-6);
-  }
-  @media (max-width: 620px) {
-    .grid { grid-template-columns: 1fr; gap: var(--gap-4); }
-  }
-
-  .kpi-label {
-    font-size: var(--t-mini);
-    color: var(--muted);
-    letter-spacing: 0.20em;
-    text-transform: uppercase;
-    display: flex; align-items: center; gap: var(--gap-2);
-  }
-  .dot {
-    width: 6px; height: 6px;
-    background: var(--amber);
-    border-radius: 50%;
-    box-shadow: 0 0 8px var(--amber);
-    animation: pulse 1.6s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50%      { opacity: 0.35; }
-  }
-
-  .kpi-value {
-    font-size: var(--t-3xl);
-    line-height: 1;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--amber);
-    margin: var(--gap-2) 0 var(--gap-2);
-  }
-  .cursor {
-    display: inline-block;
-    width: 0.55em; height: 1em;
-    background: var(--amber);
-    margin-left: 0.18em;
-    vertical-align: -0.15em;
-    animation: blink 1.2s steps(2) infinite;
-  }
+  .grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--gap-6); }
+  @media (max-width: 620px) { .grid { grid-template-columns: 1fr; gap: var(--gap-4); } }
+  .kpi-label { font-size: var(--t-mini); color: var(--muted); letter-spacing: 0.20em; text-transform: uppercase; display: flex; align-items: center; gap: var(--gap-2); }
+  .dot { width: 6px; height: 6px; background: var(--amber); border-radius: 50%; box-shadow: 0 0 8px var(--amber); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .kpi-value { font-size: var(--t-3xl); line-height: 1; font-weight: 700; letter-spacing: -0.02em; color: var(--amber); margin: var(--gap-2) 0 var(--gap-2); }
+  .cursor { display: inline-block; width: 0.55em; height: 1em; background: var(--amber); margin-left: 0.18em; vertical-align: -0.15em; animation: blink 1.2s steps(2) infinite; }
   @keyframes blink { 50% { opacity: 0; } }
-
-  .kpi-sub {
-    font-size: var(--t-small);
-    color: var(--muted);
-    letter-spacing: 0.02em;
-  }
+  .kpi-sub { font-size: var(--t-small); color: var(--muted); letter-spacing: 0.02em; }
   .kpi-sub .sep { margin: 0 var(--gap-2); color: var(--label); }
-  .ok     { color: var(--ok); }
+  .ok { color: var(--ok); }
   .danger { color: var(--danger); }
-
-  .stats {
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap-2);
-    align-self: center;
-  }
-  .stat-row {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: baseline;
-    gap: var(--gap-2);
-    font-size: var(--t-small);
-  }
+  .stats { display: flex; flex-direction: column; gap: var(--gap-2); align-self: center; }
+  .stat-row { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: var(--gap-2); font-size: var(--t-small); }
   .stat-key { color: var(--muted); text-transform: uppercase; letter-spacing: 0.14em; font-size: var(--t-mini); }
-  .stat-dots {
-    border-bottom: 1px dotted var(--border-3);
-    height: 1em;
-  }
+  .stat-dots { border-bottom: 1px dotted var(--border-3); height: 1em; }
 </style>

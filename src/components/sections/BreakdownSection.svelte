@@ -11,7 +11,7 @@
   type MonthRow = { ym: string; open: number; close: number; spent: number; goalsRub: number };
   const rows = $derived.by(() => {
     const byMonth: Record<string, DayPoint[]> = {};
-    for (const d of result.days) {
+    for (const d of result.sim.days) {
       const ym = d.date.slice(0, 7);
       (byMonth[ym] ||= []).push(d);
     }

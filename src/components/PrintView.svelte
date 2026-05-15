@@ -3,6 +3,7 @@
   import { app, activeScenario, activeInputs } from '../lib/state/scenarios.svelte';
   import { currentResult } from '../lib/state/derived';
   import { formatRub, formatUsd, formatDate } from '../lib/format';
+  import type { LayerKey } from '../lib/calc/types';
 
   const lang = $derived(app.ui.language);
   const inputs = $derived(activeInputs());
@@ -11,6 +12,8 @@
   const totalAssetsRub = $derived(
     inputs.assets.rubBank + inputs.assets.usdBank * inputs.rubPerUsd + inputs.assets.usdCash * inputs.rubPerUsd
   );
+
+  const layerKeys: LayerKey[] = ['A', 'B', 'C'];
 </script>
 
 <div class="print-only print-view">
@@ -22,10 +25,10 @@
   <section>
     <h2>{$_('results.leftOnVoyage')}</h2>
     <p class="big">{formatRub(r.balanceAtVoyage, lang)} <span class="muted">(≈ {formatUsd(r.balanceAtVoyage / inputs.rubPerUsd, lang)})</span></p>
-    <p>{$_('results.runway')}: {$_('results.daysUnit', { values: { n: r.daysOfRunway } })}</p>
+    <p>{$_('results.runway')}: {$_('results.daysUnit', { values: { n: r.sim.daysOfRunway } })}</p>
     <p>
       {$_('results.runsOut')}:
-      {#if r.runsOutOn}<b>{formatDate(r.runsOutOn, lang)}</b>{:else}{$_('results.ok')}{/if}
+      {#if r.sim.runsOutOn}<b>{formatDate(r.sim.runsOutOn, lang)}</b>{:else}{$_('results.ok')}{/if}
     </p>
   </section>
 
@@ -65,20 +68,23 @@
     </section>
   {/if}
 
-  {#if inputs.investments.length > 0}
-    <section>
-      <h2>{$_('investments.title')}</h2>
-      <ul>
-        {#each inputs.investments as inv}
-          <li>
-            {inv.name || $_(`investments.kind.${inv.kind}`)}:
-            {formatRub(inv.amountRub, lang)} @ {inv.annualRatePct}%
-            {#if inv.reinvest}({$_('investments.reinvest')}){/if}
-          </li>
-        {/each}
-      </ul>
-    </section>
-  {/if}
+  <section>
+    <h2>{$_('pdf.savings')}</h2>
+    <p>{$_('savings.inputs.cbrRate')}: {inputs.cbrKeyRatePct}% — {$_(`savings.regime.${r.alloc.regime}`)}</p>
+    <p>{$_('savings.inputs.freeCash')}: {formatRub(inputs.freeCashRub, lang)}</p>
+    <p>{$_('savings.inputs.horizon')}: {formatDate(inputs.horizonDate, lang)}</p>
+    <ul>
+      {#each layerKeys as k}
+        {@const info = r.alloc.layers[k]}
+        <li>
+          {$_(`savings.layer.${k}.name`)} · {$_(`savings.layer.${k}.window`)}:
+          {formatRub(info.amountRub, lang)} →
+          {$_('savings.layerCard.expectedIncome')}: {formatRub(info.incomeRangeRub.low, lang)} – {formatRub(info.incomeRangeRub.high, lang)}
+        </li>
+      {/each}
+    </ul>
+    <p class="muted">{$_('savings.disclaimer')}</p>
+  </section>
 </div>
 
 <style>

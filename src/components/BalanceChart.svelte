@@ -23,9 +23,9 @@
     const r = currentResult();
     const c = colors();
     const data = {
-      labels: r.days.map(d => d.date),
+      labels: r.sim.days.map(d => d.date),
       datasets: [{
-        data: r.days.map(d => d.totalRub),
+        data: r.sim.days.map(d => d.totalRub),
         borderColor: c.line,
         backgroundColor: c.fill,
         borderWidth: 1.5,

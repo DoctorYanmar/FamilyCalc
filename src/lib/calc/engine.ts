@@ -11,8 +11,8 @@ function fromISO(s: string): Date {
   return new Date(s + 'T00:00:00Z');
 }
 
-function totalRub(assets: AssetMix, rate: number, investmentTotal: number): number {
-  return assets.rubBank + assets.usdBank * rate + assets.usdCash * rate + investmentTotal;
+function totalRub(assets: AssetMix, rate: number): number {
+  return assets.rubBank + assets.usdBank * rate + assets.usdCash * rate;
 }
 
 function drain(assets: AssetMix, rubAmount: number, rate: number): void {
@@ -43,23 +43,17 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
   const totalDays = Math.max(0, Math.floor((voyage.getTime() - start.getTime()) / MS_PER_DAY) + 1);
 
   if (totalDays === 0) {
-    const investmentTotal = inputs.investments.reduce((s, i) => s + i.amountRub, 0);
     return {
       days: [],
-      balanceAtVoyage: totalRub(inputs.assets, inputs.rubPerUsd, investmentTotal),
+      balanceAtVoyage: totalRub(inputs.assets, inputs.rubPerUsd),
       runsOutOn: null,
       daysOfRunway: 0,
       totalSpentRub: 0,
-      totalInvestmentYieldRub: 0,
     };
   }
 
   const assets: AssetMix = { ...inputs.assets };
-  // Per-investment mutable balances
-  const investmentBalances: number[] = inputs.investments.map(i => i.amountRub);
-
   let totalSpent = 0;
-  let totalYield = 0;
   const dailyExpense = inputs.monthlyFamilyRub / DAYS_PER_MONTH;
   const days: DayPoint[] = [];
 
@@ -68,13 +62,11 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
     const todayISO = toISO(d);
     const todaysEvents: GoalEvent[] = [];
 
-    // 1. Daily expense
     if (dailyExpense > 0) {
       drain(assets, dailyExpense, inputs.rubPerUsd);
       totalSpent += dailyExpense;
     }
 
-    // 2. Lump goals
     for (const g of inputs.goals) {
       if (!g.enabled) continue;
       if (g.mode === 'lump' && g.date === todayISO) {
@@ -84,7 +76,6 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
       }
     }
 
-    // 3. Spread goals
     for (const g of inputs.goals) {
       if (!g.enabled || g.mode !== 'spread') continue;
       const startD = g.date;
@@ -100,32 +91,14 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
       todaysEvents.push({ goalId: g.id, name: g.name, amountRub: perDay });
     }
 
-    // 4. Investment yield
-    for (let k = 0; k < inputs.investments.length; k++) {
-      const inv = inputs.investments[k];
-      const dailyRate = Math.pow(1 + inv.annualRatePct / 100, 1 / 365) - 1;
-      if (inv.reinvest) {
-        const grow = investmentBalances[k] * dailyRate;
-        investmentBalances[k] += grow;
-        totalYield += grow;
-      } else {
-        const payout = investmentBalances[k] * dailyRate;
-        assets.rubBank += payout;
-        totalYield += payout;
-      }
-    }
-
-    const investmentTotal = investmentBalances.reduce((a, b) => a + b, 0);
     days.push({
       date: todayISO,
-      totalRub: totalRub(assets, inputs.rubPerUsd, investmentTotal),
+      totalRub: totalRub(assets, inputs.rubPerUsd),
       assetsRub: { ...assets },
       events: todaysEvents,
-      investmentValueRub: investmentTotal,
     });
   }
 
-  // Find runs-out date: first day where totalRub <= 0
   let runsOutOn: string | null = null;
   for (const d of days) {
     if (d.totalRub <= 0) {
@@ -143,6 +116,5 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
     runsOutOn,
     daysOfRunway,
     totalSpentRub: totalSpent,
-    totalInvestmentYieldRub: totalYield,
   };
 }
