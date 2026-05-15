@@ -32,10 +32,13 @@
   "assets.usdCash": "USD наличные",
   "assets.rubBank": "₽ в банке",
   "assets.totalRub": "Итого в ₽",
+  "assets.salaryLumpSum": "Зарплата (разово)",
 
   "expenses.title": "Семейные расходы",
   "expenses.monthly": "₽ в месяц",
   "expenses.totalOverLeave": "Всего за отпуск",
+  "expenses.daily": "Дневная норма",
+  "expenses.dailyHint": "расчётно",
 
   "goals.title": "Цели",
   "goals.add": "+ Добавить цель",

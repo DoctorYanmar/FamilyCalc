@@ -32,10 +32,13 @@
   "assets.usdCash": "USD cash",
   "assets.rubBank": "RUB in bank",
   "assets.totalRub": "Total in ₽",
+  "assets.salaryLumpSum": "Salary lump sum",
 
   "expenses.title": "Family expenses",
   "expenses.monthly": "₽ per month",
   "expenses.totalOverLeave": "Total over leave",
+  "expenses.daily": "Daily rate",
+  "expenses.dailyHint": "computed",
 
   "goals.title": "Goals",
   "goals.add": "+ Add goal",
