@@ -70,5 +70,11 @@
 
   "pdf.title": "Семейный бюджет",
   "pdf.scenario": "Сценарий",
-  "pdf.preparedOn": "Дата подготовки"
+  "pdf.preparedOn": "Дата подготовки",
+
+  "scenarios.defaultName": "По умолчанию",
+  "scenarios.renamePrompt": "Переименовать:",
+  "scenarios.deleteConfirm": "Удалить текущий сценарий?",
+  "scenarios.replaceConfirm": "Заменить текущие данные на импортированные?",
+  "scenarios.invalidBackup": "Неверный файл резервной копии"
 }

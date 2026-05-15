@@ -70,5 +70,11 @@
 
   "pdf.title": "Family budget",
   "pdf.scenario": "Scenario",
-  "pdf.preparedOn": "Prepared on"
+  "pdf.preparedOn": "Prepared on",
+
+  "scenarios.defaultName": "Default",
+  "scenarios.renamePrompt": "Rename:",
+  "scenarios.deleteConfirm": "Delete current scenario?",
+  "scenarios.replaceConfirm": "Replace current data with imported?",
+  "scenarios.invalidBackup": "Invalid backup file"
 }

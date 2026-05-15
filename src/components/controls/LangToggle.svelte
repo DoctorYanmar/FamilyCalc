@@ -5,6 +5,7 @@
   function setLang(lang: 'ru' | 'en') {
     app.ui.language = lang;
     setLocale(lang);
+    document.documentElement.lang = lang;
     persistSoon();
   }
 </script>

@@ -10,7 +10,7 @@ function defaultScenario(id: string): Scenario {
   const today = todayISO();
   return {
     id,
-    name: 'Default',
+    name: 'Default',  // intentionally English — set before i18n loads; user can rename
     createdAt: today,
     updatedAt: today,
     inputs: {

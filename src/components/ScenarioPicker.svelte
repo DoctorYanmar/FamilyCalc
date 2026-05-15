@@ -1,5 +1,6 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
+  import { get } from 'svelte/store';
   import {
     app, switchScenario, saveAsNew, renameScenario, deleteScenario, replaceState,
   } from '../lib/state/scenarios';
@@ -9,18 +10,18 @@
     switchScenario((e.target as HTMLSelectElement).value);
   }
   function onSaveAs() {
-    const name = prompt($_('header.saveAs'));
+    const name = prompt(get(_)('header.saveAs'));
     if (name) saveAsNew(name);
   }
   function onRename() {
     const id = app.activeScenarioId;
     const current = app.scenarios[id]?.name ?? '';
-    const name = prompt('Rename:', current);
+    const name = prompt(get(_)('scenarios.renamePrompt'), current);
     if (name) renameScenario(id, name);
   }
   function onDelete() {
     const id = app.activeScenarioId;
-    if (confirm('Delete current scenario?')) deleteScenario(id);
+    if (confirm(get(_)('scenarios.deleteConfirm'))) deleteScenario(id);
   }
   function onExport() {
     const blob = new Blob([exportJson($state.snapshot(app))], { type: 'application/json' });
@@ -37,11 +38,11 @@
     f.text().then(text => {
       try {
         const next = importJson(text);
-        if (confirm('Replace current data with imported?')) {
+        if (confirm(get(_)('scenarios.replaceConfirm'))) {
           replaceState(next);
         }
       } catch (err) {
-        alert('Invalid backup file');
+        alert(get(_)('scenarios.invalidBackup'));
       }
     });
     (e.target as HTMLInputElement).value = '';

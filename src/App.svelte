@@ -33,6 +33,7 @@
   onMount(() => {
     initI18n(app.ui.language);
     document.documentElement.setAttribute('data-theme', app.ui.theme);
+    document.documentElement.lang = app.ui.language;
     updateClock();
     const id = setInterval(updateClock, 30_000);
     return () => clearInterval(id);
