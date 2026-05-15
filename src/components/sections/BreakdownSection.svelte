@@ -1,6 +1,6 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
-  import { app } from '../../lib/state/scenarios';
+  import { app } from '../../lib/state/scenarios.svelte';
   import { currentResult } from '../../lib/state/derived';
   import CollapsibleCard from '../controls/CollapsibleCard.svelte';
   import { formatRub } from '../../lib/format';

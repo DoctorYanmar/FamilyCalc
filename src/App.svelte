@@ -1,8 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { _ } from 'svelte-i18n';
-  import { app } from './lib/state/scenarios';
-  import { initI18n } from './lib/i18n';
 
   import Atmosphere from './components/Atmosphere.svelte';
   import ScenarioPicker from './components/ScenarioPicker.svelte';
@@ -31,9 +29,6 @@
   }
 
   onMount(() => {
-    initI18n(app.ui.language);
-    document.documentElement.setAttribute('data-theme', app.ui.theme);
-    document.documentElement.lang = app.ui.language;
     updateClock();
     const id = setInterval(updateClock, 30_000);
     return () => clearInterval(id);

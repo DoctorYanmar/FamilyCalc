@@ -1,6 +1,6 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
-  import { app, activeScenario, activeInputs } from '../lib/state/scenarios';
+  import { app, activeScenario, activeInputs } from '../lib/state/scenarios.svelte';
   import { currentResult } from '../lib/state/derived';
   import { formatRub, formatUsd, formatDate } from '../lib/format';
 

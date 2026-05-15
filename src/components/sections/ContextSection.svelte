@@ -1,6 +1,6 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
-  import { app, activeInputs, persistSoon } from '../../lib/state/scenarios';
+  import { app, activeInputs, persistSoon } from '../../lib/state/scenarios.svelte';
   import CollapsibleCard from '../controls/CollapsibleCard.svelte';
   import DateInput from '../controls/DateInput.svelte';
   import CurrencyInput from '../controls/CurrencyInput.svelte';

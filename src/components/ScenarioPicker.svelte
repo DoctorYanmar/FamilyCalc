@@ -3,7 +3,7 @@
   import { get } from 'svelte/store';
   import {
     app, switchScenario, saveAsNew, renameScenario, deleteScenario, replaceState,
-  } from '../lib/state/scenarios';
+  } from '../lib/state/scenarios.svelte';
   import { exportJson, importJson } from '../lib/state/persistence';
 
   function onSwitch(e: Event) {

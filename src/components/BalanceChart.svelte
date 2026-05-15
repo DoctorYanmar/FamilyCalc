@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { Chart, registerables } from 'chart.js';
   import { currentResult } from '../lib/state/derived';
-  import { app } from '../lib/state/scenarios';
+  import { app } from '../lib/state/scenarios.svelte';
 
   Chart.register(...registerables);
 

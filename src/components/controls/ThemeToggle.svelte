@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { app, persistSoon } from '../../lib/state/scenarios';
+  import { app, persistSoon } from '../../lib/state/scenarios.svelte';
 
   function setTheme(t: 'dark' | 'light') {
     app.ui.theme = t;

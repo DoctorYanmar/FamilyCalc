@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { app, persistSoon } from '../../lib/state/scenarios';
+  import { app, persistSoon } from '../../lib/state/scenarios.svelte';
   import { setLocale } from '../../lib/i18n';
 
   function setLang(lang: 'ru' | 'en') {
