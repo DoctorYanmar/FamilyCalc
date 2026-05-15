@@ -32,45 +32,53 @@
     inputs.layerOverride = next;
     persistSoon();
   }
+
+  function layerName(full: string): string {
+    const idx = full.indexOf('·');
+    return idx >= 0 ? full.slice(idx + 1).trim() : full;
+  }
 </script>
 
-<section class="layer-card">
-  <header class="layer-head">
-    <span class="layer-name">{$_(`savings.layer.${layer}.name`)}</span>
-    <span class="layer-window">{$_(`savings.layer.${layer}.window`)}</span>
-  </header>
-
-  <div class="amount-row">
-    <label class="amount-label">
-      <span class="amount-key">{$_('savings.layerCard.amount')}</span>
+<div class="layer">
+  <!-- Header row: badge + name + window, label-style left half (matches .field column structure) -->
+  <div class="field">
+    <span class="field-key layer-key">
+      <span class="badge">{layer}</span>
+      <span class="name">{layerName($_(`savings.layer.${layer}.name`))}</span>
+      <span class="window">{$_(`savings.layer.${layer}.window`)}</span>
+    </span>
+    <span class="amount-wrap">
+      {#if overridden}
+        <button class="reset" type="button" onclick={resetToAuto} title={$_('savings.layerCard.resetToAuto')}>↺</button>
+      {/if}
       <input
         class="input"
         type="number"
         inputmode="decimal"
         min="0"
         step="any"
-        value={info.amountRub === 0 ? '' : info.amountRub}
+        value={info.amountRub === 0 ? '' : Math.round(info.amountRub)}
+        placeholder="0"
         oninput={onAmount}
+        aria-label={$_('savings.layerCard.amount')}
       />
-    </label>
-    {#if overridden}
-      <button class="btn icon" type="button" onclick={resetToAuto}>{$_('savings.layerCard.resetToAuto')}</button>
-    {/if}
+    </span>
   </div>
 
-  {#if info.candidates.length === 0}
-    <p class="empty">{$_('savings.layerCard.noCandidates')}</p>
-  {:else}
-    <div class="class-grid">
+  {#if info.candidates.length > 0}
+    <div class="classes">
       {#each info.candidates as cls (cls.id)}
         <ClassCard {cls} cbrPct={inputs.cbrKeyRatePct} />
       {/each}
     </div>
+  {:else}
+    <p class="empty">{$_('savings.layerCard.noCandidates')}</p>
   {/if}
 
-  <div class="income">
-    <span class="income-key">{$_('savings.layerCard.expectedIncome')}</span>
-    <span class="income-val number">
+  <!-- Footer row: expected income, same .field column structure -->
+  <div class="field foot">
+    <span class="field-key">{$_('savings.layerCard.expectedIncome')}</span>
+    <span class="amber number">
       {formatRub(info.incomeRangeRub.low, app.ui.language)} – {formatRub(info.incomeRangeRub.high, app.ui.language)}
     </span>
   </div>
@@ -78,27 +86,93 @@
   {#if asvFired}
     <AsvWarning />
   {/if}
-</section>
+</div>
 
 <style>
-  .layer-card {
-    border: 1px solid var(--border-2);
-    padding: var(--gap-3) var(--gap-4);
-    background: var(--surface-1);
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap-3);
+  .layer {
+    padding: var(--gap-3) 0;
+    border-bottom: 1px dashed var(--border);
   }
-  .layer-head { display: flex; justify-content: space-between; align-items: baseline; }
-  .layer-name { color: var(--amber); letter-spacing: 0.14em; text-transform: uppercase; font-size: var(--t-small); }
-  .layer-window { color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; font-size: var(--t-mini); }
-  .amount-row { display: flex; align-items: end; gap: var(--gap-2); }
-  .amount-label { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-  .amount-key { font-size: var(--t-mini); color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; }
-  .empty { color: var(--muted); font-size: var(--t-small); }
-  .class-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-2); }
-  @media (max-width: 700px) { .class-grid { grid-template-columns: 1fr; } }
-  .income { display: flex; justify-content: space-between; align-items: baseline; padding-top: var(--gap-2); border-top: 1px dashed var(--border); }
-  .income-key { font-size: var(--t-mini); color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; }
-  .income-val { color: var(--amber); }
+  .layer:last-of-type { border-bottom: 0; padding-bottom: var(--gap-2); }
+  .layer:first-of-type { padding-top: var(--gap-2); }
+
+  /* Header field's key cell: badge + name + window inline */
+  .layer-key {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-2);
+    color: var(--fg);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .badge {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    font-size: var(--t-small);
+    font-weight: 700;
+    line-height: 1;
+  }
+  .name {
+    font-size: var(--t-small);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .window {
+    font-size: var(--t-mini);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-left: var(--gap-2);
+    border-left: 1px solid var(--border);
+  }
+
+  .amount-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-2);
+  }
+  .reset {
+    background: transparent;
+    border: 1px solid var(--border-2);
+    color: var(--muted);
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: var(--t-med);
+    line-height: 1;
+    transition: color 0.12s ease, border-color 0.12s ease;
+  }
+  .reset:hover { color: var(--amber); border-color: var(--amber); }
+
+  /* Class list — borderless rows in 2 cols, indented inside the layer */
+  .classes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--gap-5);
+    padding: var(--gap-1) 0 var(--gap-2);
+  }
+  @media (max-width: 540px) {
+    .classes { grid-template-columns: 1fr; }
+  }
+  .empty {
+    color: var(--muted);
+    font-size: var(--t-small);
+    margin: 0;
+    padding: var(--gap-2) 0;
+  }
+
+  /* Footer field uses the standard .field grid; amber value aligns to same right edge */
+  .foot {
+    border-bottom: 0 !important;
+    padding-top: var(--gap-1);
+  }
+  .foot .amber {
+    color: var(--amber);
+    font-size: var(--t-small);
+  }
 </style>

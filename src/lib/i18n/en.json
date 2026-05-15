@@ -78,6 +78,7 @@
   "savings.taxBanner": "Tax-free interest threshold on deposits: ≈ {amount} ₽/year. Above it — 13% personal income tax.",
   "savings.asvWarning": "Exceeds the 1.4M ₽ AGV (deposit insurance) limit per bank. Consider splitting.",
   "savings.disclaimer": "Informational overview of instrument classes, not individual investment advice. Verify specific banks, issuers, and terms yourself.",
+  "savings.emptyState": "Enter free cash above — layers are split automatically and matching instrument classes appear here.",
 
   "savings.classes.savings_account.name": "Savings account with daily interest",
   "savings.classes.savings_account.taxNote": "Interest may be taxed above the threshold.",

@@ -16,52 +16,55 @@
   }
 </script>
 
-<div class="class-card">
-  <div class="head">
-    <span class="name">{$_(`savings.classes.${cls.id}.name`)}</span>
-    <span class="yield number">
-      {#if Math.abs(lo - hi) < 0.05}
-        {fmtPct(lo)}%
-      {:else}
-        {fmtPct(lo)}–{fmtPct(hi)}%
-      {/if}
-      <span class="pa">p.a.</span>
-    </span>
-  </div>
-  <div class="badges">
-    <span class="badge">{$_(`savings.liquidity.${cls.liquidity}`)}</span>
-    <span class="badge">{$_(`savings.currency.${cls.currency}`)}</span>
-    {#if cls.isDeposit}<span class="badge deposit">АСВ</span>{/if}
-  </div>
-  <div class="risk">
-    <span class="risk-key">{$_('savings.classCard.risk')}:</span>
-    <span class="risk-text">{$_(`savings.classes.${cls.id}.riskNote`)}</span>
+<div class="row" title={$_(`savings.classes.${cls.id}.riskNote`)}>
+  <div class="name">{$_(`savings.classes.${cls.id}.name`)}</div>
+  <div class="meta number">
+    {#if Math.abs(lo - hi) < 0.05}
+      <span class="yield">{fmtPct(lo)}%</span>
+    {:else}
+      <span class="yield">{fmtPct(lo)}–{fmtPct(hi)}%</span>
+    {/if}
+    <span class="sep">·</span>
+    <span class="cur">{$_(`savings.currency.${cls.currency}`)}</span>
+    {#if cls.isDeposit}<span class="dep" title="АСВ 1.4M ₽">ДЕП</span>{/if}
   </div>
 </div>
 
 <style>
-  .class-card {
-    border: 1px solid var(--border-2);
-    padding: var(--gap-2) var(--gap-3);
-    background: var(--surface-1);
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap-1);
+  .row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: var(--gap-2);
+    padding: 5px 0;
+    border-bottom: 1px dotted var(--border);
+    cursor: help;
   }
-  .head { display: flex; justify-content: space-between; gap: var(--gap-2); align-items: baseline; }
-  .name { font-size: var(--t-small); color: var(--fg); letter-spacing: 0.04em; }
-  .yield { font-size: var(--t-small); color: var(--amber); white-space: nowrap; }
-  .pa { color: var(--muted); font-size: var(--t-mini); letter-spacing: 0.14em; margin-left: 2px; }
-  .badges { display: flex; gap: var(--gap-1); flex-wrap: wrap; }
-  .badge {
-    font-size: var(--t-mini);
+  .row:last-child { border-bottom: 0; }
+  .name {
+    color: var(--fg);
+    font-size: var(--t-small);
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+  }
+  .meta {
     color: var(--muted);
-    border: 1px solid var(--border-3);
-    padding: 0 6px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    font-size: var(--t-mini);
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
   }
-  .badge.deposit { color: var(--amber); border-color: var(--amber); }
-  .risk { font-size: var(--t-mini); color: var(--muted); line-height: 1.4; }
-  .risk-key { letter-spacing: 0.14em; text-transform: uppercase; margin-right: 4px; }
+  .yield { color: var(--amber); font-feature-settings: 'tnum'; }
+  .sep { color: var(--label); }
+  .cur { text-transform: uppercase; letter-spacing: 0.12em; }
+  .dep {
+    color: var(--amber-deep);
+    border: 1px solid var(--border-2);
+    padding: 0 4px;
+    margin-left: 4px;
+    font-size: var(--t-micro);
+    letter-spacing: 0.16em;
+  }
 </style>

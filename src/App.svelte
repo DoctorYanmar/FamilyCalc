@@ -13,10 +13,7 @@
   import ExpensesSection from './components/sections/ExpensesSection.svelte';
   import GoalsSection from './components/sections/GoalsSection.svelte';
   import BreakdownSection from './components/sections/BreakdownSection.svelte';
-  import LayerCard from './components/sections/savings/LayerCard.svelte';
-  import SavingsInputsCard from './components/sections/savings/SavingsInputsCard.svelte';
-  import TaxBanner from './components/sections/savings/TaxBanner.svelte';
-  import SavingsDisclaimer from './components/sections/savings/SavingsDisclaimer.svelte';
+  import SavingsSection from './components/sections/savings/SavingsSection.svelte';
   import PrintView from './components/PrintView.svelte';
 
   let clock = $state('');
@@ -64,23 +61,11 @@
 
   <div class="ornament">─── ─── ───</div>
 
-  <main class="layout">
-    <section class="layers">
-      <LayerCard layer="A" />
-      <LayerCard layer="B" />
-      <LayerCard layer="C" />
-      <TaxBanner />
-      <SavingsDisclaimer />
-    </section>
-    <aside class="sidebar">
-      <ContextSection />
-      <AssetsSection />
-      <ExpensesSection />
-      <GoalsSection />
-      <SavingsInputsCard />
-    </aside>
-  </main>
-
+  <ContextSection />
+  <AssetsSection />
+  <ExpensesSection />
+  <GoalsSection />
+  <SavingsSection />
   <BreakdownSection />
 
   <div class="ornament">─── FIN ───</div>
@@ -96,19 +81,5 @@
     flex-wrap: wrap;
     padding: var(--gap-3) 0;
     border-bottom: 1px solid var(--border);
-  }
-  .layout {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: var(--gap-5);
-    margin-top: var(--gap-4);
-  }
-  .layers, .sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap-4);
-  }
-  @media (max-width: 900px) {
-    .layout { grid-template-columns: 1fr; }
   }
 </style>
