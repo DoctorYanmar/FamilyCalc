@@ -8,11 +8,14 @@
   "theme.dark": "Тёмная",
   "theme.light": "Светлая",
 
+  "results.burnPerDay": "Расход в день",
+  "results.daysUnit": "{n} {n, plural, one {день} few {дня} other {дней}}",
   "results.leftOnVoyage": "Остаток на дату рейса",
+  "results.ok": "✓ хватает",
   "results.runsOut": "Деньги закончатся",
   "results.runway": "Запас",
-  "results.ok": "✓ хватает",
-  "results.daysUnit": "{n} {n, plural, one {день} few {дня} other {дней}}",
+  "results.spent": "Потрачено",
+  "results.yield": "Доход",
 
   "context.title": "Контекст и курс",
   "context.returnDate": "Дата возвращения",

@@ -49,17 +49,17 @@
         <span class="number">{$_('results.daysUnit', { values: { n: result.daysOfRunway } })}</span>
       </div>
       <div class="stat-row">
-        <span class="stat-key">burn / day</span>
+        <span class="stat-key">{$_('results.burnPerDay')}</span>
         <span class="stat-dots"></span>
         <span class="number">{formatRub(burnPerDay, app.ui.language)}</span>
       </div>
       <div class="stat-row">
-        <span class="stat-key">yield</span>
+        <span class="stat-key">{$_('results.yield')}</span>
         <span class="stat-dots"></span>
         <span class="number ok">+ {formatRub(result.totalInvestmentYieldRub, app.ui.language)}</span>
       </div>
       <div class="stat-row">
-        <span class="stat-key">spent</span>
+        <span class="stat-key">{$_('results.spent')}</span>
         <span class="stat-dots"></span>
         <span class="number">{formatRub(result.totalSpentRub, app.ui.language)}</span>
       </div>

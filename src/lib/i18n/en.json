@@ -8,11 +8,14 @@
   "theme.dark": "Dark",
   "theme.light": "Light",
 
+  "results.burnPerDay": "burn / day",
+  "results.daysUnit": "{n} {n, plural, one {day} other {days}}",
   "results.leftOnVoyage": "Left on voyage date",
+  "results.ok": "✓ OK",
   "results.runsOut": "Money runs out",
   "results.runway": "Runway",
-  "results.ok": "✓ OK",
-  "results.daysUnit": "{n} {n, plural, one {day} other {days}}",
+  "results.spent": "spent",
+  "results.yield": "yield",
 
   "context.title": "Context & rate",
   "context.returnDate": "Return date",
