@@ -100,18 +100,18 @@
   <AsvWarning />
 
   <footer class="report-foot">
-    <label class="toggle-label">
-      <div
-        class="toggle-cb"
-        class:on={inputs.includeExpectedYield}
-        role="switch"
-        aria-checked={inputs.includeExpectedYield}
-        tabindex="0"
-        onclick={onYieldToggle}
-        onkeydown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); onYieldToggle(); } }}
-      ></div>
+    <span
+      class="toggle-label"
+      role="switch"
+      aria-checked={inputs.includeExpectedYield}
+      tabindex="0"
+      onclick={onYieldToggle}
+      onkeydown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); onYieldToggle(); } }}
+      aria-label={$_('savings.inputs.includeYield')}
+    >
+      <span class="toggle-cb" class:on={inputs.includeExpectedYield} aria-hidden="true"></span>
       <span>{$_('savings.inputs.includeYield')}</span>
-    </label>
+    </span>
     <span class="number" style="font-family:var(--mono);color:var(--fg-3)">
       {$_('savings.midYield')} · <strong style="color:var(--accent);font-weight:600">+ {formatRub(result.expectedYieldMid, app.ui.language)}</strong>
     </span>
