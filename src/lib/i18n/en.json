@@ -2,6 +2,8 @@
   "app.title": "FamilyCalc",
   "header.scenario": "Scenario",
   "header.saveAs": "Save as…",
+  "header.rename": "Rename",
+  "header.delete": "Delete",
   "header.export": "Export JSON",
   "header.import": "Import JSON",
   "header.print": "Print / PDF",

@@ -2,6 +2,8 @@
   "app.title": "Семейный калькулятор",
   "header.scenario": "Сценарий",
   "header.saveAs": "Сохранить как…",
+  "header.rename": "Переименовать",
+  "header.delete": "Удалить",
   "header.export": "Экспорт JSON",
   "header.import": "Импорт JSON",
   "header.print": "Печать / PDF",

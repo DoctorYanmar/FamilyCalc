@@ -50,23 +50,24 @@
 </script>
 
 <div class="scenario-picker">
-  <select value={app.activeScenarioId} onchange={onSwitch}>
+  <select class="select" value={app.activeScenarioId} onchange={onSwitch} aria-label={$_('header.scenario')}>
     {#each Object.values(app.scenarios) as s}
       <option value={s.id}>{s.name}</option>
     {/each}
   </select>
-  <button onclick={onSaveAs} title={$_('header.saveAs')}>+</button>
-  <button onclick={onRename} title="Rename">✎</button>
-  <button onclick={onDelete} title="Delete">🗑</button>
-  <button onclick={onExport} title={$_('header.export')}>⤓</button>
-  <label class="import-btn" title={$_('header.import')}>
-    ⤒
-    <input type="file" accept="application/json" onchange={onImport} style="display:none" />
+  <button class="btn icon" type="button" onclick={onSaveAs} title={$_('header.saveAs')} aria-label={$_('header.saveAs')}>+</button>
+  <button class="btn icon" type="button" onclick={onRename} title={$_('header.rename')} aria-label={$_('header.rename')}>✎</button>
+  <button class="btn icon danger" type="button" onclick={onDelete} title={$_('header.delete')} aria-label={$_('header.delete')}>×</button>
+  <button class="btn icon" type="button" onclick={onExport} title={$_('header.export')} aria-label={$_('header.export')}>↓</button>
+  <label class="btn icon import-btn" title={$_('header.import')} aria-label={$_('header.import')}>
+    ↑
+    <input type="file" accept="application/json" onchange={onImport} hidden />
   </label>
 </div>
 
 <style>
-  .scenario-picker { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-  .scenario-picker select { max-width: 160px; }
-  .import-btn { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+  .scenario-picker { display: inline-flex; gap: var(--gap-1); align-items: stretch; flex-wrap: wrap; }
+  /* Header dropdown is a widget — keep it modestly sized, not the form-section 160–220px. */
+  .scenario-picker :global(.select) { max-width: 200px; padding: 4px 26px 4px 8px; }
+  .import-btn { display: inline-flex; align-items: center; cursor: pointer; }
 </style>
