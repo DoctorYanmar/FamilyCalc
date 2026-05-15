@@ -25,7 +25,7 @@
   });
 </script>
 
-<CollapsibleCard title={$_('breakdown.title')} open={false}>
+<CollapsibleCard title={$_('breakdown.title')}>
   <table>
     <thead>
       <tr>

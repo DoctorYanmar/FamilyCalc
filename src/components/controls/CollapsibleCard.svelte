@@ -2,35 +2,18 @@
   type Props = {
     title: string;
     subtitle?: string;
-    open?: boolean;
-    onToggle?: (open: boolean) => void;
+    meta?: string;
     children?: import('svelte').Snippet;
   };
-  let { title, subtitle, open = $bindable(true), onToggle, children }: Props = $props();
-
-  function toggle() {
-    open = !open;
-    onToggle?.(open);
-  }
+  let { title, subtitle, meta, children }: Props = $props();
 </script>
 
 <section class="card">
-  <button class="card-head" type="button" onclick={toggle} aria-expanded={open}>
-    <span class="card-title">{title}</span>
-    <span class="card-sub">{#if subtitle}{subtitle} · {/if}{open ? '─' : '+'}</span>
-  </button>
-  {#if open}
-    <div class="card-body">
-      {@render children?.()}
-    </div>
-  {/if}
+  <div class="card-head">
+    <div class="card-title">{title}{#if subtitle} · <span style="color:var(--fg-3);font-weight:400">{subtitle}</span>{/if}</div>
+    {#if meta}<div class="card-meta">{meta}</div>{/if}
+  </div>
+  <div class="card-body">
+    {@render children?.()}
+  </div>
 </section>
-
-<style>
-  button.card-head {
-    background: transparent;
-    border: 0;
-    width: 100%;
-    text-align: left;
-  }
-</style>
