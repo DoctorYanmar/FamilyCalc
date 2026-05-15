@@ -40,9 +40,12 @@ export function defaultState(): AppState {
 
 function migrate(raw: unknown): AppState {
   if (typeof raw !== 'object' || raw === null) throw new Error('Invalid state');
-  const s = raw as Partial<AppState>;
-  if (s.schemaVersion !== 1) throw new Error(`Unsupported schemaVersion: ${s.schemaVersion}`);
-  return s as AppState;
+  const s = raw as Record<string, unknown>;
+  if (s.schemaVersion !== 1) throw new Error(`Unsupported schemaVersion: ${String(s.schemaVersion)}`);
+  if (typeof s.activeScenarioId !== 'string' || typeof s.scenarios !== 'object' || s.scenarios === null) {
+    throw new Error('Invalid state shape');
+  }
+  return s as unknown as AppState;
 }
 
 export function loadState(): AppState {

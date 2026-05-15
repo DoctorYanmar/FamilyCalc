@@ -43,7 +43,15 @@ describe('persistence — JSON export/import', () => {
     expect(() => importJson('not-json')).toThrow();
   });
 
-  it('importJson rejects bad schemaVersion', () => {
-    expect(() => importJson(JSON.stringify({ schemaVersion: 99 }))).toThrow();
+  it('importJson rejects bad schemaVersion with descriptive message', () => {
+    expect(() => importJson(JSON.stringify({ schemaVersion: 99 }))).toThrow(/Unsupported schemaVersion/);
+  });
+
+  it('importJson rejects v1 object missing activeScenarioId', () => {
+    expect(() => importJson(JSON.stringify({ schemaVersion: 1, scenarios: {} }))).toThrow(/Invalid state shape/);
+  });
+
+  it('importJson rejects v1 object missing scenarios', () => {
+    expect(() => importJson(JSON.stringify({ schemaVersion: 1, activeScenarioId: 'x' }))).toThrow(/Invalid state shape/);
   });
 });
