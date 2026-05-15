@@ -339,6 +339,19 @@ a { color: var(--primary); }
 }
 .input[readonly] { color: var(--fg-3); cursor: default; }
 
+/* Strip native number-input spinners — every numeric input in this app is
+   keyboard-only. The ± stepper widget covers cases where increment buttons
+   are needed; everywhere else, the spinners just clash with the .suffix span. */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 .input-wrap {
   position: relative;
   display: inline-block;
