@@ -2,152 +2,138 @@
   import { _ } from 'svelte-i18n';
   import { app, activeInputs, persistSoon } from '../../../lib/state/scenarios.svelte';
   import { currentResult } from '../../../lib/state/derived';
-  import { formatDate } from '../../../lib/format';
-  import CollapsibleCard from '../../controls/CollapsibleCard.svelte';
-  import CurrencyInput from '../../controls/CurrencyInput.svelte';
-  import DateInput from '../../controls/DateInput.svelte';
+  import { formatDate, formatRub } from '../../../lib/format';
   import LayerCard from './LayerCard.svelte';
   import TaxBanner from './TaxBanner.svelte';
+  import AsvWarning from './AsvWarning.svelte';
   import SavingsDisclaimer from './SavingsDisclaimer.svelte';
 
   const inputs = $derived(activeInputs());
   const result = $derived(currentResult());
   const hasCash = $derived(inputs.freeCashRub > 0);
 
-  function setFreeCash(v: number) { inputs.freeCashRub = v; persistSoon(); }
-  function onCbr(e: Event) {
+  function setFreeCash(e: Event) {
     const n = Number((e.target as HTMLInputElement).value);
     if (!Number.isNaN(n) && n >= 0) {
-      inputs.cbrKeyRatePct = n;
+      inputs.freeCashRub = n;
+      persistSoon();
+    }
+  }
+  function setCbr(e: Event) {
+    const n = Number((e.target as HTMLInputElement).value);
+    if (!Number.isNaN(n) && n >= 0 && n <= 30) {
+      inputs.cbrKeyRatePct = +n.toFixed(2);
       inputs.cbrRateUpdatedAt = new Date().toISOString().slice(0, 10);
       persistSoon();
     }
   }
-  function setHorizon(v: string) { inputs.horizonDate = v; persistSoon(); }
-  function onYieldToggle(e: Event) {
-    inputs.includeExpectedYield = (e.target as HTMLInputElement).checked;
+  function bumpCbr(d: number) {
+    const next = +(inputs.cbrKeyRatePct + d).toFixed(2);
+    if (next >= 0 && next <= 30) {
+      inputs.cbrKeyRatePct = next;
+      inputs.cbrRateUpdatedAt = new Date().toISOString().slice(0, 10);
+      persistSoon();
+    }
+  }
+  function setHorizon(e: Event) { inputs.horizonDate = (e.target as HTMLInputElement).value; persistSoon(); }
+  function onYieldToggle() {
+    inputs.includeExpectedYield = !inputs.includeExpectedYield;
     persistSoon();
   }
 </script>
 
-<CollapsibleCard title={$_('savings.title')} subtitle={$_(`savings.regime.${result.alloc.regime}`)}>
-  <CurrencyInput
-    label={$_('savings.inputs.freeCash')}
-    value={inputs.freeCashRub}
-    onChange={setFreeCash}
-    suffix="₽"
-  />
+<section class="report-card">
+  <header class="report-head">
+    <div class="report-title">
+      {$_('savings.title')}
+      <span class="badge">{$_('savings.badge')}</span>
+    </div>
+    <div class="report-meta">
+      <span>{$_('savings.freeCashShort')} <strong style="color:var(--fg);font-family:var(--mono)">{formatRub(inputs.freeCashRub, app.ui.language)}</strong></span>
+      <span class="regime">{$_(`savings.regime.${result.alloc.regime}`)}</span>
+    </div>
+  </header>
 
-  <div class="field">
-    <span class="field-key">
-      {$_('savings.inputs.cbrRate')}
-      <span class="field-hint" title={$_('savings.inputs.cbrTooltip')}>
-        ⓘ {$_('savings.inputs.cbrUpdated')} {formatDate(inputs.cbrRateUpdatedAt, app.ui.language)}
+  <div class="report-inputs">
+    <div class="report-input">
+      <div class="lbl">{$_('savings.inputs.freeCash')}</div>
+      <span class="input-wrap">
+        <input class="input with-suffix" type="number" inputmode="decimal" min="0" step="any"
+               value={inputs.freeCashRub === 0 ? '' : inputs.freeCashRub}
+               placeholder="0"
+               oninput={setFreeCash} />
+        <span class="suffix">₽</span>
       </span>
-    </span>
-    <span class="cbr-row">
-      <span class="regime-pill regime-{result.alloc.regime}">{result.alloc.regime}</span>
-      <input
-        class="input"
-        type="number" inputmode="decimal" min="0" max="30" step="0.1"
-        value={inputs.cbrKeyRatePct}
-        oninput={onCbr}
-      />
-    </span>
+    </div>
+    <div class="report-input">
+      <div class="lbl">
+        {$_('savings.inputs.cbrRate')}
+        <span class="hint" title={$_('savings.inputs.cbrTooltip')}>
+          ⓘ {$_('savings.inputs.cbrUpdated')} {formatDate(inputs.cbrRateUpdatedAt, app.ui.language)}
+        </span>
+      </div>
+      <div class="stepper" role="group" aria-label={$_('savings.inputs.cbrRate')}>
+        <button type="button" onclick={() => bumpCbr(-0.25)} aria-label="-0.25">−</button>
+        <input class="stepper-val" type="number" inputmode="decimal" min="0" max="30" step="0.25"
+               value={inputs.cbrKeyRatePct}
+               oninput={setCbr} />
+        <button type="button" onclick={() => bumpCbr(0.25)} aria-label="+0.25">+</button>
+      </div>
+    </div>
+    <div class="report-input">
+      <div class="lbl">{$_('savings.inputs.horizon')}</div>
+      <input class="input date" type="date" value={inputs.horizonDate} oninput={setHorizon} />
+    </div>
   </div>
 
-  <DateInput
-    label={$_('savings.inputs.horizon')}
-    value={inputs.horizonDate}
-    onChange={setHorizon}
-  />
-
-  <div class="rule"></div>
-
   {#if !hasCash}
-    <div class="empty-state">
-      <span class="empty-arrow">▴</span>
-      <span class="empty-text">{$_('savings.emptyState')}</span>
-    </div>
+    <div class="layer-empty">{$_('savings.emptyState')}</div>
   {:else}
-    <div class="layers">
+    <div class="report-layers">
       <LayerCard layer="A" />
       <LayerCard layer="B" />
       <LayerCard layer="C" />
     </div>
   {/if}
 
-  <div class="rule"></div>
-
   <TaxBanner />
+  <AsvWarning />
 
-  <label class="field toggle-field">
-    <span class="field-key">{$_('savings.inputs.includeYield')}</span>
-    <input type="checkbox" class="toggle-cb" checked={inputs.includeExpectedYield} onchange={onYieldToggle} />
-  </label>
+  <footer class="report-foot">
+    <label class="toggle-label">
+      <div
+        class="toggle-cb"
+        class:on={inputs.includeExpectedYield}
+        role="switch"
+        aria-checked={inputs.includeExpectedYield}
+        tabindex="0"
+        onclick={onYieldToggle}
+        onkeydown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); onYieldToggle(); } }}
+      ></div>
+      <span>{$_('savings.inputs.includeYield')}</span>
+    </label>
+    <span class="number" style="font-family:var(--mono);color:var(--fg-3)">
+      {$_('savings.midYield')} · <strong style="color:var(--accent);font-weight:600">+ {formatRub(result.expectedYieldMid, app.ui.language)}</strong>
+    </span>
+  </footer>
 
   <SavingsDisclaimer />
-</CollapsibleCard>
+</section>
 
 <style>
-  /* CBR row: regime pill + standard-width input, right-aligned like every other field */
-  .cbr-row {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--gap-2);
-  }
-  .regime-pill {
-    font-size: var(--t-micro);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    padding: 4px 8px;
-    border: 1px solid currentColor;
-    line-height: 1;
-    white-space: nowrap;
-  }
-  .regime-high     { color: var(--amber); }
-  .regime-moderate { color: var(--ok); }
-  .regime-low      { color: var(--info); }
-
-  /* Section divider between input rows and layer rows */
-  .rule {
-    height: 1px;
-    background: repeating-linear-gradient(90deg, var(--border-2) 0 6px, transparent 6px 10px);
-    margin: var(--gap-4) 0 var(--gap-2);
-  }
-
-  .empty-state {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--gap-2);
-    padding: var(--gap-8) var(--gap-4);
-    color: var(--muted);
+  /* .stepper-val is a span in global.css; here it's an editable <input>
+     so we reset native chrome and re-apply the visual rhythm. The stepper
+     widget itself enforces the size — no per-input width hack. */
+  .stepper > .stepper-val {
+    all: unset;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: 8px 14px;
+    font-family: var(--mono);
+    font-size: var(--t-med);
+    color: var(--fg);
+    font-variant-numeric: tabular-nums;
+    flex: 1;
     text-align: center;
-  }
-  .empty-arrow {
-    color: var(--amber);
-    font-size: var(--t-lg);
-    animation: bob 1.6s ease-in-out infinite;
-  }
-  @keyframes bob {
-    0%, 100% { transform: translateY(-2px); }
-    50%      { transform: translateY(-8px); }
-  }
-  .empty-text {
-    font-size: var(--t-small);
-    letter-spacing: 0.06em;
-    max-width: 360px;
-  }
-
-  .layers { display: flex; flex-direction: column; }
-
-  /* Toggle row: align checkbox to the same right edge as every other input */
-  .toggle-field { cursor: pointer; }
-  .toggle-cb {
-    accent-color: var(--amber);
-    width: 16px;
-    height: 16px;
-    margin: 0;
   }
 </style>
