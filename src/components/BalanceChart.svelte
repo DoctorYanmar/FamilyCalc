@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { _ } from 'svelte-i18n';
   import { Chart, registerables } from 'chart.js';
   import { currentResult } from '../lib/state/derived';
   import { app } from '../lib/state/scenarios.svelte';
@@ -12,10 +13,11 @@
   function colors() {
     const dark = app.ui.theme === 'dark';
     return {
-      line: dark ? '#ffb454' : '#b8651d',
-      fill: dark ? 'rgba(255,180,84,0.10)' : 'rgba(184,101,29,0.08)',
-      grid: dark ? '#1f1f1f' : '#c8bfa8',
-      label: dark ? '#707070' : '#6e6655',
+      line:  dark ? '#3B82F6' : '#2563EB',
+      fill:  dark ? 'rgba(59,130,246,0.18)' : 'rgba(37,99,235,0.10)',
+      grid:  dark ? 'rgba(255,255,255,0.05)' : 'rgba(15,23,42,0.06)',
+      label: dark ? '#94A3B8' : '#64748B',
+      voyage: dark ? '#F59E0B' : '#D97706',
     };
   }
 
@@ -28,26 +30,37 @@
         data: r.sim.days.map(d => d.totalRub),
         borderColor: c.line,
         backgroundColor: c.fill,
-        borderWidth: 1.5,
+        borderWidth: 2,
         fill: true,
         pointRadius: 0,
-        tension: 0,  // sharp, deterministic line — no smoothing
+        tension: 0.15,
       }],
     };
     const options: any = {
       responsive: true,
       maintainAspectRatio: false,
-      animation: { duration: 600, easing: 'easeOutCubic' },
-      plugins: { legend: { display: false }, tooltip: {
-        backgroundColor: 'rgba(15,15,15,0.95)', borderColor: c.line, borderWidth: 1,
-        titleColor: c.line, bodyColor: '#e4e4e4', titleFont: { family: 'JetBrains Mono' },
-        bodyFont: { family: 'JetBrains Mono' },
-      } },
+      animation: { duration: 400, easing: 'easeOutCubic' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: app.ui.theme === 'dark' ? 'rgba(19,29,51,0.95)' : 'rgba(248,250,252,0.95)',
+          borderColor: c.line,
+          borderWidth: 1,
+          titleColor: c.line,
+          bodyColor: app.ui.theme === 'dark' ? '#F8FAFC' : '#0F172A',
+          titleFont: { family: 'Fira Code' },
+          bodyFont: { family: 'Fira Code' },
+        },
+      },
       scales: {
-        x: { ticks: { color: c.label, font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 6 },
-             grid: { color: c.grid } },
-        y: { ticks: { color: c.label, font: { family: 'JetBrains Mono', size: 10 } },
-             grid: { color: c.grid } },
+        x: {
+          ticks: { color: c.label, font: { family: 'Fira Code', size: 10 }, maxTicksLimit: 8 },
+          grid:  { color: c.grid },
+        },
+        y: {
+          ticks: { color: c.label, font: { family: 'Fira Code', size: 10 } },
+          grid:  { color: c.grid },
+        },
       },
     };
     if (chart) {
@@ -65,49 +78,37 @@
   });
 
   $effect(() => {
-    // depend on result + theme
     void currentResult();
     void app.ui.theme;
     if (chart) buildOrUpdate();
   });
 </script>
 
-<div class="chart-wrap">
-  <div class="chart-frame">
-    <div class="chart-corner tl"></div><div class="chart-corner tr"></div>
-    <div class="chart-corner bl"></div><div class="chart-corner br"></div>
-    <div class="chart-label">▸ BALANCE / TIME · ₽</div>
+<section class="card chart-card">
+  <div class="card-head">
+    <div class="card-title">{$_('chart.title')}</div>
+    <div class="chart-legend">
+      <span class="ld">{$_('chart.legend.projected')}</span>
+    </div>
+  </div>
+  <div class="chart-body">
     <canvas bind:this={canvas}></canvas>
   </div>
-</div>
+</section>
 
 <style>
-  .chart-wrap { margin-top: var(--gap-4); }
-  .chart-frame {
-    position: relative;
-    height: 240px;
-    padding: var(--gap-5) var(--gap-4) var(--gap-3);
-    background: var(--surface-1);
-    border: 1px solid var(--border-2);
+  .chart-card { margin-bottom: var(--gap-4); }
+  .chart-body { height: 240px; padding: var(--gap-3) var(--gap-5) var(--gap-4); }
+  .chart-legend {
+    display: flex; gap: var(--gap-3);
+    font-size: var(--t-mini); color: var(--fg-3);
   }
-  .chart-label {
-    position: absolute;
-    top: 8px; left: 12px;
-    font-size: var(--t-mini);
-    color: var(--amber);
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+  .chart-legend .ld { display: inline-flex; align-items: center; gap: 6px; }
+  .chart-legend .ld::before {
+    content: ''; width: 10px; height: 2px;
+    border-radius: 2px; background: var(--primary);
   }
-  .chart-corner {
-    position: absolute;
-    width: 10px; height: 10px;
-    border-color: var(--amber);
-    border-style: solid;
-    border-width: 0;
+  @media (max-width: 640px) {
+    .chart-body { height: 180px; padding: var(--gap-2) var(--gap-3) var(--gap-3); }
   }
-  .tl { top: -1px; left: -1px;   border-top-width: 1px; border-left-width: 1px; }
-  .tr { top: -1px; right: -1px;  border-top-width: 1px; border-right-width: 1px; }
-  .bl { bottom: -1px; left: -1px; border-bottom-width: 1px; border-left-width: 1px; }
-  .br { bottom: -1px; right: -1px; border-bottom-width: 1px; border-right-width: 1px; }
-  canvas { width: 100%; height: 100%; }
 </style>

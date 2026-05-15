@@ -115,6 +115,9 @@
   "savings.classes.gold.taxNote": "OMS: tax on sale. Exchange gold and gold bonds: tax on gains, 3-yr long-hold relief.",
   "savings.classes.gold.riskNote": "Price swings sharply; defensive, not income-producing.",
 
+  "chart.title": "Balance over time",
+  "chart.legend.projected": "Projected balance",
+
   "breakdown.title": "Monthly",
   "breakdown.month": "Month",
   "breakdown.open": "Opening",

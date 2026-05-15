@@ -115,6 +115,9 @@
   "savings.classes.gold.taxNote": "ОМС: НДФЛ при продаже. Биржевое золото и ЗО: НДФЛ с прибыли, ЛДВ 3 года.",
   "savings.classes.gold.riskNote": "Цена сильно колеблется, защитный, но не доходный актив.",
 
+  "chart.title": "Баланс во времени",
+  "chart.legend.projected": "Прогноз баланса",
+
   "breakdown.title": "Помесячно",
   "breakdown.month": "Месяц",
   "breakdown.open": "Открытие",
