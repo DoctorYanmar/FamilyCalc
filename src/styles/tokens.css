@@ -52,14 +52,6 @@
   --danger:       #DC2626;
   --info:         #38BDF8;
   --ok:           #10B981;
-
-  /* Legacy aliases (kept while components migrate; remove after Task 23) */
-  --amber:        #F59E0B;
-  --amber-soft:   rgba(245, 158, 11, 0.12);
-  --amber-deep:   #D97706;
-  --border-2:     rgba(255, 255, 255, 0.10);
-  --border-3:     rgba(255, 255, 255, 0.18);
-  --fg-dim:       #CBD5E1;
 }
 
 :root[data-theme='light'] {
@@ -83,11 +75,4 @@
   --danger:       #B91C1C;
   --info:         #0284C7;
   --ok:           #059669;
-
-  --amber:        #D97706;
-  --amber-soft:   rgba(217, 119, 6, 0.10);
-  --amber-deep:   #B45309;
-  --border-2:     rgba(15, 23, 42, 0.12);
-  --border-3:     rgba(15, 23, 42, 0.24);
-  --fg-dim:       #334155;
 }
