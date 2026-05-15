@@ -161,11 +161,26 @@ describe('simulate — edge cases', () => {
     expect(result.balanceAtVoyage).toBe(1_000_000);
   });
 
-  it('ignores savings-framework fields (they do not affect cash drain)', () => {
+  it('deducts freeCashRub from balanceAtVoyage but does NOT add to totalSpent', () => {
+    const base = simulate({
+      ...emptyInputs(),
+      assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
+    }, new Date('2026-05-01'));
+    const withFreeCash = simulate({
+      ...emptyInputs(),
+      assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
+      freeCashRub: 200_000,
+    }, new Date('2026-05-01'));
+    expect(withFreeCash.balanceAtVoyage).toBe(base.balanceAtVoyage - 200_000);
+    // freeCash is locked up, not spent — totalSpent is unaffected
+    expect(withFreeCash.totalSpentRub).toBe(base.totalSpentRub);
+  });
+
+  it('non-cash savings-framework fields (cbr, horizon, layerOverride, includeYield) do not affect simulate()', () => {
     const base = simulate(emptyInputs(), new Date('2026-05-01'));
     const withSavingsNoise = simulate({
       ...emptyInputs(),
-      freeCashRub: 999_999_999,
+      // freeCashRub deliberately stays at 0 — this test isolates the OTHER fields
       cbrKeyRatePct: 25,
       horizonDate: '2099-01-01',
       layerOverride: { A: 1_000_000, B: 1_000_000, C: 1_000_000 },
