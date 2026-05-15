@@ -51,7 +51,7 @@
       <label class="inv-check">
         <input type="checkbox" checked={inv.reinvest}
                onchange={(e) => update(inv.id, { reinvest: (e.target as HTMLInputElement).checked })} />
-        <span>reinvest</span>
+        <span>{$_('investments.reinvest')}</span>
       </label>
       <button class="btn icon danger" type="button" onclick={() => remove(inv.id)} aria-label="Delete">×</button>
     </div>

@@ -58,7 +58,7 @@
       <label class="goal-check">
         <input type="checkbox" checked={g.enabled}
                onchange={(e) => updateGoal(g.id, { enabled: (e.target as HTMLInputElement).checked })} />
-        <span>on</span>
+        <span>{$_('goals.enabled')}</span>
       </label>
       <button class="btn icon danger" type="button" onclick={() => removeGoal(g.id)} aria-label="Delete">×</button>
     </div>
