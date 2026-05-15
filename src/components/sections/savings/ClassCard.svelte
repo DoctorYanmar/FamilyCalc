@@ -2,11 +2,7 @@
   import { _ } from 'svelte-i18n';
   import type { InstrumentClass } from '../../../lib/calc/types';
 
-  type Props = {
-    cls: InstrumentClass;
-    cbrPct: number;
-  };
-  let { cls, cbrPct }: Props = $props();
+  let { cls, cbrPct }: { cls: InstrumentClass; cbrPct: number } = $props();
 
   const lo = $derived(cbrPct + cls.cbrOffset.low);
   const hi = $derived(cbrPct + cls.cbrOffset.high);
@@ -16,55 +12,44 @@
   }
 </script>
 
-<div class="row" title={$_(`savings.classes.${cls.id}.riskNote`)}>
-  <div class="name">{$_(`savings.classes.${cls.id}.name`)}</div>
-  <div class="meta number">
+<div class="layer-class" title={$_(`savings.classes.${cls.id}.riskNote`)}>
+  <span class="name">{$_(`savings.classes.${cls.id}.name`)}</span>
+  <span class="meta">
     {#if Math.abs(lo - hi) < 0.05}
-      <span class="yield">{fmtPct(lo)}%</span>
+      <span class="yld">{fmtPct(lo)}%</span>
     {:else}
-      <span class="yield">{fmtPct(lo)}–{fmtPct(hi)}%</span>
+      <span class="yld">{fmtPct(lo)}–{fmtPct(hi)}%</span>
     {/if}
     <span class="sep">·</span>
     <span class="cur">{$_(`savings.currency.${cls.currency}`)}</span>
     {#if cls.isDeposit}<span class="dep" title="АСВ 1.4M ₽">ДЕП</span>{/if}
-  </div>
+  </span>
 </div>
 
 <style>
-  .row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: baseline;
-    gap: var(--gap-2);
-    padding: 5px 0;
-    border-bottom: 1px dotted var(--border);
-    cursor: help;
-  }
-  .row:last-child { border-bottom: 0; }
-  .name {
-    color: var(--fg);
-    font-size: var(--t-small);
-    line-height: 1.3;
-    letter-spacing: 0.01em;
-  }
   .meta {
-    color: var(--muted);
-    font-size: var(--t-mini);
-    letter-spacing: 0.06em;
-    white-space: nowrap;
     display: inline-flex;
     align-items: baseline;
     gap: 4px;
+    color: var(--fg-3);
+    font-family: var(--mono);
+    font-size: var(--t-mini);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
-  .yield { color: var(--amber); font-feature-settings: 'tnum'; }
-  .sep { color: var(--label); }
-  .cur { text-transform: uppercase; letter-spacing: 0.12em; }
+  .sep { color: var(--fg-4); }
+  .cur {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: var(--t-micro);
+  }
   .dep {
-    color: var(--amber-deep);
-    border: 1px solid var(--border-2);
+    color: var(--warn);
+    border: 1px solid var(--border);
     padding: 0 4px;
     margin-left: 4px;
-    font-size: var(--t-micro);
+    font-size: 9px;
     letter-spacing: 0.16em;
+    font-family: var(--sans);
   }
 </style>
