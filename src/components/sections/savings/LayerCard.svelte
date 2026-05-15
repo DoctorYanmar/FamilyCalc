@@ -5,16 +5,21 @@
   import { formatRub } from '../../../lib/format';
   import type { LayerKey } from '../../../lib/calc/types';
   import ClassCard from './ClassCard.svelte';
-  import AsvWarning from './AsvWarning.svelte';
 
-  type Props = { layer: LayerKey };
-  let { layer }: Props = $props();
+  let { layer }: { layer: LayerKey } = $props();
 
   const inputs = $derived(activeInputs());
   const result = $derived(currentResult());
-  const info   = $derived(result.alloc.layers[layer]);
+  const info = $derived(result.alloc.layers[layer]);
   const overridden = $derived(inputs.layerOverride[layer] !== undefined);
-  const asvFired = $derived(result.alloc.asvWarningLayers.includes(layer));
+
+  const share = $derived(inputs.freeCashRub > 0 ? info.amountRub / inputs.freeCashRub : 0);
+  const sharePct = $derived(Math.round(share * 100));
+
+  function layerShortName(full: string): string {
+    const idx = full.indexOf('·');
+    return idx >= 0 ? full.slice(idx + 1).trim() : full;
+  }
 
   function onAmount(e: Event) {
     const target = e.target as HTMLInputElement;
@@ -32,147 +37,117 @@
     inputs.layerOverride = next;
     persistSoon();
   }
-
-  function layerName(full: string): string {
-    const idx = full.indexOf('·');
-    return idx >= 0 ? full.slice(idx + 1).trim() : full;
-  }
 </script>
 
-<div class="layer">
-  <!-- Header row: badge + name + window, label-style left half (matches .field column structure) -->
-  <div class="field">
-    <span class="field-key layer-key">
-      <span class="badge">{layer}</span>
-      <span class="name">{layerName($_(`savings.layer.${layer}.name`))}</span>
-      <span class="window">{$_(`savings.layer.${layer}.window`)}</span>
-    </span>
-    <span class="amount-wrap">
+<div class="layer {layer.toLowerCase()}">
+  <div class="layer-head">
+    <div class="layer-tag">
+      <span class="swatch"></span>
+      {layer} · {layerShortName($_(`savings.layer.${layer}.name`))}
+    </div>
+    <div class="layer-share-row">
       {#if overridden}
-        <button class="reset" type="button" onclick={resetToAuto} title={$_('savings.layerCard.resetToAuto')}>↺</button>
+        <button class="reset-btn" type="button" onclick={resetToAuto} title={$_('savings.layerCard.resetToAuto')} aria-label={$_('savings.layerCard.resetToAuto')}>↺</button>
       {/if}
-      <input
-        class="input"
-        type="number"
-        inputmode="decimal"
-        min="0"
-        step="any"
-        value={info.amountRub === 0 ? '' : Math.round(info.amountRub)}
-        placeholder="0"
-        oninput={onAmount}
-        aria-label={$_('savings.layerCard.amount')}
-      />
-    </span>
+      <span class="layer-share">{sharePct}%</span>
+    </div>
   </div>
 
-  {#if info.candidates.length > 0}
-    <div class="classes">
+  <input
+    class="layer-amt-input"
+    type="number"
+    inputmode="decimal"
+    min="0"
+    step="any"
+    value={info.amountRub === 0 ? '' : Math.round(info.amountRub)}
+    placeholder="0"
+    oninput={onAmount}
+    aria-label={$_('savings.layerCard.amount')}
+  />
+
+  <div class="layer-bar"><div style="width: {sharePct}%"></div></div>
+
+  {#if info.candidates.length === 0}
+    <p class="layer-empty-mini">{$_('savings.layerCard.noCandidates')}</p>
+  {:else}
+    <div class="layer-classes">
       {#each info.candidates as cls (cls.id)}
-        <ClassCard {cls} cbrPct={inputs.cbrKeyRatePct} />
+        <ClassCard cls={cls} cbrPct={inputs.cbrKeyRatePct} />
       {/each}
     </div>
-  {:else}
-    <p class="empty">{$_('savings.layerCard.noCandidates')}</p>
   {/if}
 
-  <!-- Footer row: expected income, same .field column structure -->
-  <div class="field foot">
-    <span class="field-key">{$_('savings.layerCard.expectedIncome')}</span>
-    <span class="amber number">
-      {formatRub(info.incomeRangeRub.low, app.ui.language)} – {formatRub(info.incomeRangeRub.high, app.ui.language)}
-    </span>
+  <div class="layer-foot">
+    <span class="foot-lbl">{$_('savings.layerCard.expectedIncome')}</span>
+    <span class="foot-val">{formatRub(info.incomeRangeRub.low, app.ui.language)} – {formatRub(info.incomeRangeRub.high, app.ui.language)}</span>
   </div>
-
-  {#if asvFired}
-    <AsvWarning />
-  {/if}
 </div>
 
 <style>
-  .layer {
-    padding: var(--gap-3) 0;
-    border-bottom: 1px dashed var(--border);
-  }
-  .layer:last-of-type { border-bottom: 0; padding-bottom: var(--gap-2); }
-  .layer:first-of-type { padding-top: var(--gap-2); }
-
-  /* Header field's key cell: badge + name + window inline */
-  .layer-key {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--gap-2);
-    color: var(--fg);
-    text-transform: none;
-    letter-spacing: 0;
-  }
-  .badge {
-    display: inline-grid;
-    place-items: center;
-    width: 22px;
-    height: 22px;
-    border: 1px solid var(--amber);
-    color: var(--amber);
-    font-size: var(--t-small);
-    font-weight: 700;
-    line-height: 1;
-  }
-  .name {
-    font-size: var(--t-small);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+  /* Override the global .layer-amt span style by using an input that
+     looks like the big number but is editable. all:unset strips native
+     input chrome; the rules below re-apply the layer-amt visual rhythm. */
+  .layer-amt-input {
+    all: unset;
+    font-family: var(--mono);
+    font-size: var(--t-2xl);
     font-weight: 600;
+    color: var(--fg);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    width: 100%;
+    border-bottom: 1px solid transparent;
+    padding: 2px 0;
+    transition: border-color 150ms ease;
+    cursor: text;
+    box-sizing: border-box;
   }
-  .window {
-    font-size: var(--t-mini);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding-left: var(--gap-2);
-    border-left: 1px solid var(--border);
-  }
+  .layer-amt-input:hover  { border-bottom-color: var(--border); }
+  .layer-amt-input:focus  { border-bottom-color: var(--primary); outline: none; }
+  .layer-amt-input::placeholder { color: var(--fg-4); }
 
-  .amount-wrap {
+  .layer-share-row {
     display: inline-flex;
     align-items: center;
     gap: var(--gap-2);
   }
-  .reset {
+  .reset-btn {
     background: transparent;
-    border: 1px solid var(--border-2);
-    color: var(--muted);
+    border: 1px solid var(--border);
+    color: var(--fg-4);
     width: 24px;
     height: 24px;
     cursor: pointer;
     font-size: var(--t-med);
     line-height: 1;
-    transition: color 0.12s ease, border-color 0.12s ease;
+    border-radius: var(--radius-sm);
+    transition: color 150ms ease, border-color 150ms ease;
+    padding: 0;
   }
-  .reset:hover { color: var(--amber); border-color: var(--amber); }
+  .reset-btn:hover { color: var(--primary); border-color: var(--primary); }
 
-  /* Class list — borderless rows in 2 cols, indented inside the layer */
-  .classes {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: var(--gap-5);
-    padding: var(--gap-1) 0 var(--gap-2);
-  }
-  @media (max-width: 540px) {
-    .classes { grid-template-columns: 1fr; }
-  }
-  .empty {
-    color: var(--muted);
+  .layer-empty-mini {
+    color: var(--fg-4);
     font-size: var(--t-small);
     margin: 0;
     padding: var(--gap-2) 0;
+    text-align: center;
   }
 
-  /* Footer field uses the standard .field grid; amber value aligns to same right edge */
-  .foot {
-    border-bottom: 0 !important;
-    padding-top: var(--gap-1);
-  }
-  .foot .amber {
-    color: var(--amber);
+  .layer-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-top: var(--gap-2);
+    border-top: 1px dashed var(--border);
     font-size: var(--t-small);
   }
+  .foot-lbl { color: var(--fg-3); }
+  .foot-val {
+    color: var(--accent);
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .layer.b .foot-val { color: var(--primary); }
+  .layer.c .foot-val { color: var(--warn); }
 </style>
