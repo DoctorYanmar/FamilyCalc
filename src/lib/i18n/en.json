@@ -1,12 +1,14 @@
 {
   "app.title": "FamilyCalc",
+  "header.language": "Language",
+  "header.print": "Print / PDF",
   "header.scenario": "Scenario",
   "header.saveAs": "Save as…",
   "header.rename": "Rename",
   "header.delete": "Delete",
   "header.export": "Export JSON",
   "header.import": "Import JSON",
-  "header.print": "Print / PDF",
+  "header.theme": "Theme",
   "theme.dark": "Dark",
   "theme.light": "Light",
 
