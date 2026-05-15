@@ -129,5 +129,14 @@
   "scenarios.renamePrompt": "Переименовать:",
   "scenarios.deleteConfirm": "Удалить текущий сценарий?",
   "scenarios.replaceConfirm": "Заменить текущие данные на импортированные?",
-  "scenarios.invalidBackup": "Неверный файл резервной копии"
+  "scenarios.invalidBackup": "Неверный файл резервной копии",
+
+  "scenario.label": "Сценарий",
+  "scenario.rename": "Переименовать",
+  "scenario.renamePrompt": "Переименовать сценарий:",
+  "scenario.duplicate": "Дублировать",
+  "scenario.duplicatePrompt": "Имя нового сценария:",
+  "scenario.delete": "Удалить",
+  "scenario.deleteConfirm": "Удалить сценарий «{name}»?",
+  "scenario.cannotDeleteLast": "Нельзя удалить единственный сценарий."
 }

@@ -129,5 +129,14 @@
   "scenarios.renamePrompt": "Rename:",
   "scenarios.deleteConfirm": "Delete current scenario?",
   "scenarios.replaceConfirm": "Replace current data with imported?",
-  "scenarios.invalidBackup": "Invalid backup file"
+  "scenarios.invalidBackup": "Invalid backup file",
+
+  "scenario.label": "Scenario",
+  "scenario.rename": "Rename",
+  "scenario.renamePrompt": "Rename scenario:",
+  "scenario.duplicate": "Duplicate",
+  "scenario.duplicatePrompt": "New scenario name:",
+  "scenario.delete": "Delete",
+  "scenario.deleteConfirm": "Delete scenario \"{name}\"?",
+  "scenario.cannotDeleteLast": "Cannot delete the only scenario."
 }
