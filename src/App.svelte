@@ -16,7 +16,7 @@
   import GoalsSection from './components/sections/GoalsSection.svelte';
   import InvestmentsSection from './components/sections/InvestmentsSection.svelte';
   import BreakdownSection from './components/sections/BreakdownSection.svelte';
-  // TODO Phase 10: import PrintView from './components/PrintView.svelte';
+  import PrintView from './components/PrintView.svelte';
 
   let clock = $state('');
   function updateClock() {
@@ -75,7 +75,7 @@
   <div class="ornament">─── FIN ───</div>
 </div>
 
-<!-- TODO Phase 10: <PrintView /> -->
+<PrintView />
 
 <style>
   .header-controls {

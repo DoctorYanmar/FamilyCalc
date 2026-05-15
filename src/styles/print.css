@@ -1,0 +1,28 @@
+@media print {
+  @page { size: A4; margin: 12mm 14mm; }
+
+  /* Force paper-terminal palette regardless of UI theme */
+  :root, :root[data-theme='dark'] {
+    --bg: #f5f1e8 !important;
+    --surface-1: #f0ebde !important;
+    --surface-2: #ebe5d4 !important;
+    --surface-3: #e3dcc8 !important;
+    --border: #c8bfa8 !important;
+    --border-2: #a89e85 !important;
+    --border-3: #6e6655 !important;
+    --fg: #1a1815 !important;
+    --fg-dim: #4a4538 !important;
+    --muted: #6e6655 !important;
+    --label: #8a8270 !important;
+    --amber: #b8651d !important;
+    --amber-soft: rgba(184,101,29,0.10) !important;
+  }
+
+  html, body { background: #f5f1e8 !important; color: #1a1815 !important; }
+
+  .app-shell { display: none; }
+  .print-only, .print-view { display: block !important; }
+
+  /* Strip atmosphere from print */
+  .atmos, .scanline, .vignette, .static { display: none !important; }
+}
