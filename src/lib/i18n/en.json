@@ -160,6 +160,66 @@
   "savings.classes.gold.taxNote": "OMS: tax on sale. Exchange gold and gold bonds: tax on gains, 3-yr long-hold relief.",
   "savings.classes.gold.riskNote": "Price swings sharply; defensive, not income-producing.",
 
+  "savings.classes.savings_account.edu.whatItIs": "Bank account that pays interest on the balance. Money is available any day; the rate may be changed by the bank.",
+  "savings.classes.savings_account.edu.howToBuy": "Opened at a bank branch or via the bank's mobile app. Often linked to a debit card.",
+  "savings.classes.savings_account.edu.yieldBehavior": "Rate ≈ CBR key rate − 1…3 pp. The bank may change it unilaterally. Interest accrues monthly.",
+  "savings.classes.savings_account.edu.tax": "Russian bank interest is taxed at 13% PIT above the annual exempt threshold (CBR × ₽1M/year).",
+  "savings.classes.savings_account.edu.whenToPick": "For the 0–30 day cash cushion. Up to ₽1.4M per bank is covered by deposit insurance (АСВ).",
+
+  "savings.classes.term_deposit.edu.whatItIs": "Fixed-rate bank deposit for 3, 6, or 12 months. Early withdrawal forfeits the accrued interest.",
+  "savings.classes.term_deposit.edu.howToBuy": "Opened at a bank branch or via the bank's mobile app. A term must be selected.",
+  "savings.classes.term_deposit.edu.yieldBehavior": "Rate ≈ CBR key rate − 0.5…+1.5 pp. Locked in for the full term of the deposit.",
+  "savings.classes.term_deposit.edu.tax": "13% PIT on interest above the annual exempt threshold (CBR × ₽1M/year).",
+  "savings.classes.term_deposit.edu.whenToPick": "For money you are certain you will not need before the term ends. АСВ deposit insurance covers up to ₽1.4M per bank.",
+
+  "savings.classes.mm_fund.edu.whatItIs": "Exchange-traded fund holding short-dated government bonds and repo trades. Functionally similar to a savings account but without АСВ coverage.",
+  "savings.classes.mm_fund.edu.howToBuy": "On the Moscow Exchange through a broker. Tickers such as LQDT, AKMM, SBMM. One unit ≈ ₽1.",
+  "savings.classes.mm_fund.edu.yieldBehavior": "Yield ≈ CBR key rate − 0.5…1 pp. Accrual is daily; sellable on any trading day.",
+  "savings.classes.mm_fund.edu.tax": "13% PIT on gains at sale. A Type-B IIS account exempts gains from tax.",
+  "savings.classes.mm_fund.edu.whenToPick": "When you already have a brokerage account and prefer not to split cash across banks for АСВ coverage.",
+
+  "savings.classes.ofz_pd.edu.whatItIs": "OFZ federal bond with a fixed coupon. Russian government debt in rubles.",
+  "savings.classes.ofz_pd.edu.howToBuy": "On the Moscow Exchange through a broker. Face value ₽1,000. Coupon paid semi-annually.",
+  "savings.classes.ofz_pd.edu.yieldBehavior": "Yield to maturity ≈ CBR key rate − 1…+0.5 pp. Price falls when rates rise — selling before maturity may book a loss.",
+  "savings.classes.ofz_pd.edu.tax": "Coupon is taxed at 13% PIT. A Type-A IIS account gives a 13% deduction on contributions; a Type-B IIS account exempts gains from tax.",
+  "savings.classes.ofz_pd.edu.whenToPick": "When you expect the CBR key rate to fall and are willing to hold to maturity.",
+
+  "savings.classes.ofz_pk.edu.whatItIs": "OFZ federal bond with a floating coupon tied to the RUONIA rate.",
+  "savings.classes.ofz_pk.edu.howToBuy": "On the Moscow Exchange through a broker. Face value ₽1,000.",
+  "savings.classes.ofz_pk.edu.yieldBehavior": "Coupon resets every 3–6 months against average RUONIA. Price moves less than fixed-coupon OFZ-PD.",
+  "savings.classes.ofz_pk.edu.tax": "Coupon is taxed at 13% PIT. A Type-B IIS account exempts gains from tax.",
+  "savings.classes.ofz_pk.edu.whenToPick": "When the CBR key rate may rise or its path is unclear. Low sensitivity to rate moves.",
+
+  "savings.classes.ofz_in.edu.whatItIs": "OFZ federal bond with inflation protection. Face value is indexed to CPI.",
+  "savings.classes.ofz_in.edu.howToBuy": "On the Moscow Exchange through a broker. 52000-series tickers.",
+  "savings.classes.ofz_in.edu.yieldBehavior": "2.5% coupon on the indexed face value plus CPI indexation. Real yield ≈ 2.5% + inflation.",
+  "savings.classes.ofz_in.edu.tax": "Coupon is taxed at 13% PIT. The face-value indexation paid at maturity is also taxed.",
+  "savings.classes.ofz_in.edu.whenToPick": "To protect long-duration money from inflation. Horizon of 1+ year.",
+
+  "savings.classes.corp_bond.edu.whatItIs": "Bond issued by a top-tier Russian company (Sberbank, Rosneft, Russian Railways, etc.).",
+  "savings.classes.corp_bond.edu.howToBuy": "On the Moscow Exchange through a broker. Face value typically ₽1,000.",
+  "savings.classes.corp_bond.edu.yieldBehavior": "Yield ≈ CBR key rate + 0.5…2 pp (credit risk premium). Price reacts both to rates and to issuer-specific news.",
+  "savings.classes.corp_bond.edu.tax": "Coupon is taxed at 13% PIT. A Type-B IIS account exempts gains from tax.",
+  "savings.classes.corp_bond.edu.whenToPick": "When you are willing to take credit risk for extra yield. Diversify across issuers.",
+
+  "savings.classes.replacement_bond.edu.whatItIs": "Replacement bond — issued in rubles but indexed to the US dollar. Coupon and principal are denominated in USD; payments are in rubles at the CBR rate.",
+  "savings.classes.replacement_bond.edu.howToBuy": "On the Moscow Exchange through a broker. No FX account required.",
+  "savings.classes.replacement_bond.edu.yieldBehavior": "Yield ≈ 6…9% in dollars. Ruble return = dollar yield + ruble depreciation.",
+  "savings.classes.replacement_bond.edu.tax": "13% PIT on the coupon and on FX gains at sale or maturity.",
+  "savings.classes.replacement_bond.edu.whenToPick": "To hedge ruble depreciation on a 1+ year horizon. Acceptance of sanctions and settlement risk.",
+
+  "savings.classes.cny_bond.edu.whatItIs": "Bond denominated in Chinese yuan. Coupon and principal in CNY, settled through a Russian broker.",
+  "savings.classes.cny_bond.edu.howToBuy": "On the Moscow Exchange through a broker that supports the CNY section.",
+  "savings.classes.cny_bond.edu.yieldBehavior": "Yield ≈ 5…8% in yuan. Ruble return = yuan yield + CNY/RUB movement.",
+  "savings.classes.cny_bond.edu.tax": "13% PIT on the coupon and on FX gains at sale or maturity.",
+  "savings.classes.cny_bond.edu.whenToPick": "Currency diversification without dollar exposure. Acceptance of a thin secondary market.",
+
+  "savings.classes.gold.edu.whatItIs": "Exchange-traded gold or gold-linked bonds (OMS unallocated metal accounts, futures, Seligdar gold replacement bonds). Principal tracks the LBMA gold price.",
+  "savings.classes.gold.edu.howToBuy": "On the Moscow Exchange through a broker, or at a bank via an unallocated metal account (OMS).",
+  "savings.classes.gold.edu.yieldBehavior": "Return = change in the ruble gold price. Can be as much as +20% or −15% in a year. Pays no coupon.",
+  "savings.classes.gold.edu.tax": "13% PIT on gains at sale. A Type-B IIS account exempts gains for exchange-traded forms.",
+  "savings.classes.gold.edu.whenToPick": "Protection against systemic shocks. No more than 5–10% of the portfolio. Acceptance of large drawdowns.",
+
   "chart.title": "Balance over time",
   "chart.legend.projected": "Projected balance",
 
