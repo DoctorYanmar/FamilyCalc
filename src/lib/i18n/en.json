@@ -83,6 +83,7 @@
   "savings.layerCard.resetToAuto": "Reset",
   "savings.layerCard.expectedIncome": "Expected income over horizon",
   "savings.layerCard.noCandidates": "No instrument classes match this regime",
+  "savings.layerCard.noIncomeHint": "No income — layer has zero allocation or horizon is too short",
   "savings.classCard.risk": "Risk",
   "savings.liquidity.daily": "daily",
   "savings.liquidity.fixed-term": "fixed term",

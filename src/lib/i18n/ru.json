@@ -83,6 +83,7 @@
   "savings.layerCard.resetToAuto": "Сбросить",
   "savings.layerCard.expectedIncome": "Ожидаемый доход за горизонт",
   "savings.layerCard.noCandidates": "Нет подходящих классов для этого режима",
+  "savings.layerCard.noIncomeHint": "Доход не считается — нулевая сумма или горизонт меньше 180 дней",
   "savings.classCard.risk": "Риск",
   "savings.liquidity.daily": "ежедневная",
   "savings.liquidity.fixed-term": "срочный",

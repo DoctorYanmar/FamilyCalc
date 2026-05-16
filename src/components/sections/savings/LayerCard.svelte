@@ -79,7 +79,11 @@
 
   <div class="layer-foot">
     <span class="foot-lbl">{$_('savings.layerCard.expectedIncome')}</span>
-    <span class="foot-val">{formatRub(info.incomeRangeRub.low, app.ui.language)} – {formatRub(info.incomeRangeRub.high, app.ui.language)}</span>
+    {#if info.incomeRangeRub.high <= 0}
+      <span class="foot-val foot-empty" title={$_('savings.layerCard.noIncomeHint')}>—</span>
+    {:else}
+      <span class="foot-val">{formatRub(info.incomeRangeRub.low, app.ui.language)} – {formatRub(info.incomeRangeRub.high, app.ui.language)}</span>
+    {/if}
   </div>
 </div>
 
@@ -148,6 +152,10 @@
     font-family: var(--mono);
     font-variant-numeric: tabular-nums;
   }
-  .layer.b .foot-val { color: var(--primary); }
-  .layer.c .foot-val { color: var(--warn); }
+  .foot-val.foot-empty {
+    color: var(--fg-4);
+    cursor: help;
+  }
+  .layer.b .foot-val:not(.foot-empty) { color: var(--primary); }
+  .layer.c .foot-val:not(.foot-empty) { color: var(--warn); }
 </style>
