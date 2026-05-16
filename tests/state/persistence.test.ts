@@ -8,7 +8,7 @@ describe('persistence — localStorage', () => {
 
   it('loadState returns defaultState when storage empty', () => {
     const s = loadState();
-    expect(s.schemaVersion).toBe(2);
+    expect(s.schemaVersion).toBe(3);
     expect(Object.keys(s.scenarios)).toHaveLength(1);
   });
 
@@ -23,7 +23,7 @@ describe('persistence — localStorage', () => {
   it('falls back to defaultState on corrupted JSON', () => {
     localStorage.setItem(STORAGE_KEY, 'not-json{{{');
     const s = loadState();
-    expect(s.schemaVersion).toBe(2);
+    expect(s.schemaVersion).toBe(3);
   });
 });
 
@@ -36,7 +36,7 @@ describe('persistence — JSON export/import', () => {
     const json = exportJson(s);
     const parsed = importJson(json);
     expect(parsed.ui.theme).toBe('light');
-    expect(parsed.schemaVersion).toBe(2);
+    expect(parsed.schemaVersion).toBe(3);
   });
 
   it('importJson rejects invalid JSON', () => {
@@ -56,8 +56,8 @@ describe('persistence — JSON export/import', () => {
   });
 });
 
-describe('migrate v1 → v2', () => {
-  it('seeds freeCashRub from sum of investment amounts and drops investments', () => {
+describe('migrate v1 → v3 (chained)', () => {
+  it('seeds freeCashRub from investments AND auto-fills savingsPicks', () => {
     const v1 = {
       schemaVersion: 1,
       activeScenarioId: 's1',
@@ -78,41 +78,74 @@ describe('migrate v1 → v2', () => {
       },
       ui: { language: 'ru', theme: 'dark', openSections: {} },
     };
-    const v2 = importJson(JSON.stringify(v1));
-    expect(v2.schemaVersion).toBe(2);
-    const inp = v2.scenarios.s1.inputs as any;
+    const v3 = importJson(JSON.stringify(v1));
+    expect(v3.schemaVersion).toBe(3);
+    const inp = v3.scenarios.s1.inputs as any;
     expect(inp.investments).toBeUndefined();
     expect(inp.freeCashRub).toBe(800_000);
-    expect(inp.horizonDate).toBe('2026-08-01'); // defaults to voyageDate
-    expect(inp.cbrKeyRatePct).toBe(16);
-    expect(typeof inp.cbrRateUpdatedAt).toBe('string');
-    expect(inp.layerOverride).toEqual({});
-    expect(inp.includeExpectedYield).toBe(false);
+    expect(inp.savingsPicks).toBeDefined();
+    expect(inp.savingsPicks.A.preset).toBe('cons');
+    expect(inp.savingsPicks.B.preset).toBe('cons');
+    expect(inp.savingsPicks.C.preset).toBe('bal');
   });
 
-  it('accepts a v2 blob unchanged', () => {
-    const v2 = {
-      schemaVersion: 2,
+  it('accepts a v3 blob unchanged', () => {
+    const v3 = {
+      schemaVersion: 3,
       activeScenarioId: 's1',
       scenarios: {
         s1: {
-          id: 's1', name: 'New', createdAt: '2026-05-01', updatedAt: '2026-05-01',
+          id: 's1', name: 'New', createdAt: '2026-05-16', updatedAt: '2026-05-16',
           inputs: {
-            returnDate: '2026-05-01', voyageDate: '2026-08-01',
+            returnDate: '2026-05-16', voyageDate: '2026-08-01',
             salaryLumpSumUsd: 0,
             assets: { usdBank: 0, usdCash: 0, rubBank: 0 },
             rubPerUsd: 90, monthlyFamilyRub: 0, goals: [],
             freeCashRub: 123, horizonDate: '2026-08-01',
-            cbrKeyRatePct: 12, cbrRateUpdatedAt: '2026-05-01',
+            cbrKeyRatePct: 12, cbrRateUpdatedAt: '2026-05-16',
             layerOverride: { A: 50 }, includeExpectedYield: true,
+            savingsPicks: {
+              A: { preset: 'custom', classes: {} },
+              B: { preset: 'cons',   classes: {} },
+              C: { preset: 'bal',    classes: {} },
+            },
           },
         },
       },
       ui: { language: 'en', theme: 'light', openSections: {} },
     };
-    const out = importJson(JSON.stringify(v2));
-    expect(out.schemaVersion).toBe(2);
+    const out = importJson(JSON.stringify(v3));
+    expect(out.schemaVersion).toBe(3);
     expect((out.scenarios.s1.inputs as any).freeCashRub).toBe(123);
+    expect((out.scenarios.s1.inputs as any).savingsPicks.A.preset).toBe('custom');
+  });
+
+  it('migrates a v2 blob to v3, seeding savingsPicks via auto-fill', () => {
+    const v2 = {
+      schemaVersion: 2,
+      activeScenarioId: 's1',
+      scenarios: {
+        s1: {
+          id: 's1', name: 'V2', createdAt: '2026-05-01', updatedAt: '2026-05-01',
+          inputs: {
+            returnDate: '2026-05-01', voyageDate: '2026-08-01',
+            salaryLumpSumUsd: 0,
+            assets: { usdBank: 0, usdCash: 0, rubBank: 0 },
+            rubPerUsd: 90, monthlyFamilyRub: 80_000, goals: [],
+            freeCashRub: 1_000_000, horizonDate: '2026-12-01',
+            cbrKeyRatePct: 16, cbrRateUpdatedAt: '2026-05-01',
+            layerOverride: {}, includeExpectedYield: false,
+          },
+        },
+      },
+      ui: { language: 'ru', theme: 'dark', openSections: {} },
+    };
+    const v3 = importJson(JSON.stringify(v2));
+    expect(v3.schemaVersion).toBe(3);
+    const inp = v3.scenarios.s1.inputs as any;
+    expect(inp.savingsPicks).toBeDefined();
+    expect(inp.savingsPicks.A.preset).toBe('cons');
+    expect(Object.keys(inp.savingsPicks.A.classes).length).toBeGreaterThan(0);
   });
 
   it('rejects unknown schemaVersion', () => {
