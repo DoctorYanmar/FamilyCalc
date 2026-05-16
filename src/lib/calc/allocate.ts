@@ -12,6 +12,7 @@ import type {
   LayerInfo,
   LayerKey,
   InstrumentClass,
+  LayerPicks,
   ClassPick,
   Preset,
   Risk,
@@ -74,33 +75,55 @@ function layerInfo(
   timeDays: number,
   candidates: InstrumentClass[],
   cbrPct: number,
+  picks: LayerPicks,
 ): LayerInfo {
-  if (candidates.length === 0 || amount <= 0 || timeDays <= 0) {
-    return {
-      amountRub: amount,
-      timeDays,
-      candidates,
-      incomeRangeRub: { low: 0, high: 0 },
-      incomeMidRub: 0,
-    };
-  }
-  let lowestRate = Infinity;
-  let highestRate = -Infinity;
+  const factor = timeDays / 365;
+
+  type Pick = {
+    cls: InstrumentClass;
+    share: number;
+    incomeLow: number;
+    incomeHigh: number;
+    incomeMid: number;
+  };
+
+  const pickedClasses: Pick[] = [];
+  let sumLow = 0;
+  let sumHigh = 0;
+  let sumShare = 0;
+
   for (const c of candidates) {
-    const r1 = cbrPct + c.cbrOffset.low;
-    const r2 = cbrPct + c.cbrOffset.high;
-    if (r1 < lowestRate) lowestRate = r1;
-    if (r2 > highestRate) highestRate = r2;
+    const entry = picks.classes[c.id];
+    if (!entry || entry.share <= 0) continue;
+    const share = entry.share;
+    const rateLow  = cbrPct + c.cbrOffset.low;
+    const rateHigh = cbrPct + c.cbrOffset.high;
+    const incomeLow  = share * (rateLow  / 100) * factor;
+    const incomeHigh = share * (rateHigh / 100) * factor;
+    pickedClasses.push({
+      cls: c,
+      share,
+      incomeLow,
+      incomeHigh,
+      incomeMid: (incomeLow + incomeHigh) / 2,
+    });
+    sumLow  += incomeLow;
+    sumHigh += incomeHigh;
+    sumShare += share;
   }
-  const factor = (timeDays / 365);
-  const low  = amount * (lowestRate  / 100) * factor;
-  const high = amount * (highestRate / 100) * factor;
+
+  const unallocatedRub  = Math.max(0, amount - sumShare);
+  const overAllocatedRub = Math.max(0, sumShare - amount);
+
   return {
     amountRub: amount,
     timeDays,
     candidates,
-    incomeRangeRub: { low, high },
-    incomeMidRub: (low + high) / 2,
+    pickedClasses,
+    incomeRangeRub: { low: sumLow, high: sumHigh },
+    incomeMidRub: (sumLow + sumHigh) / 2,
+    unallocatedRub,
+    overAllocatedRub,
   };
 }
 
@@ -133,9 +156,9 @@ export function allocate(inputs: Inputs, today: Date): AllocationResult {
   const candC = candidatesFor('C', regime);
 
   const layers = {
-    A: layerInfo(amounts.A, tA, candA, inputs.cbrKeyRatePct),
-    B: layerInfo(amounts.B, tB, candB, inputs.cbrKeyRatePct),
-    C: layerInfo(amounts.C, tC, candC, inputs.cbrKeyRatePct),
+    A: layerInfo(amounts.A, tA, candA, inputs.cbrKeyRatePct, inputs.savingsPicks.A),
+    B: layerInfo(amounts.B, tB, candB, inputs.cbrKeyRatePct, inputs.savingsPicks.B),
+    C: layerInfo(amounts.C, tC, candC, inputs.cbrKeyRatePct, inputs.savingsPicks.C),
   };
 
   const asvWarningLayers: LayerKey[] = [];

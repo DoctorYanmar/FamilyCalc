@@ -2,7 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { regimeFor } from '../../src/lib/calc/allocate';
 import { allocate } from '../../src/lib/calc/allocate';
 import { autoFillFromPreset } from '../../src/lib/calc/allocate';
-import type { Inputs, InstrumentClass } from '../../src/lib/calc/types';
+import type { Inputs, InstrumentClass, SavingsPicks } from '../../src/lib/calc/types';
+
+const EMPTY_PICKS: SavingsPicks = {
+  A: { preset: 'custom', classes: {} },
+  B: { preset: 'custom', classes: {} },
+  C: { preset: 'custom', classes: {} },
+};
 
 describe('regimeFor', () => {
   it('returns "low" for rate < 10', () => {
@@ -34,6 +40,7 @@ function baseInputs(overrides: Partial<Inputs> = {}): Inputs {
     cbrRateUpdatedAt: '2026-05-01',
     layerOverride: {},
     includeExpectedYield: false,
+    savingsPicks: EMPTY_PICKS,
     ...overrides,
   };
 }
@@ -119,18 +126,15 @@ describe('allocate — candidates and yield range', () => {
     expect(idsC).toContain('ofz_pk');
   });
 
-  it('Layer A income range scales with amount, rate range, and time-in-layer', () => {
-    // Layer A candidates at CBR=16: savings_account (13..15), term_deposit (15.5..17.5), mm_fund (15..15.5)
-    // allRateLow = 13, allRateHigh = 17.5
-    // amount = 100k, tA = min(30, 365) = 30 days
+  it('Layer A amount and time are populated regardless of picks; empty picks → zero income', () => {
+    // With empty picks (no user-selected instruments), income is 0 even though
+    // amount and timeDays are correctly set. Income now comes from picks, not
+    // min/max over all candidates.
     const r = allocate(baseInputs({ cbrKeyRatePct: 16, freeCashRub: 100_000, monthlyFamilyRub: 100_000 }), today);
     expect(r.layers.A.amountRub).toBe(100_000);
     expect(r.layers.A.timeDays).toBe(30);
-    const expLow  = 100_000 * (13 / 100) * (30 / 365);
-    const expHigh = 100_000 * (17.5 / 100) * (30 / 365);
-    expect(r.layers.A.incomeRangeRub.low).toBeCloseTo(expLow, 2);
-    expect(r.layers.A.incomeRangeRub.high).toBeCloseTo(expHigh, 2);
-    expect(r.layers.A.incomeMidRub).toBeCloseTo((expLow + expHigh) / 2, 2);
+    expect(r.layers.A.incomeRangeRub).toEqual({ low: 0, high: 0 });
+    expect(r.layers.A.incomeMidRub).toBe(0);
   });
 
   it('returns zero income when amount is zero', () => {
@@ -266,5 +270,127 @@ describe('autoFillFromPreset', () => {
     const candidates = [classOf('a', 'cons'), classOf('b', 'cons')];
     const result = autoFillFromPreset(0, candidates, 'cons');
     expect(result).toEqual({});
+  });
+});
+
+function baseInputsWithPicks(picks: Inputs['savingsPicks']): Inputs {
+  return {
+    returnDate: '2026-05-16',
+    voyageDate: '2027-05-16',
+    salaryLumpSumUsd: 0,
+    assets: { usdBank: 0, usdCash: 0, rubBank: 0 },
+    rubPerUsd: 90,
+    monthlyFamilyRub: 0,
+    goals: [],
+    freeCashRub: 1_000_000,
+    horizonDate: '2027-05-16',
+    cbrKeyRatePct: 16.0,
+    cbrRateUpdatedAt: '2026-05-16',
+    layerOverride: { A: 600_000, B: 400_000, C: 0 },
+    includeExpectedYield: false,
+    savingsPicks: picks,
+  };
+}
+
+describe('allocate — picks-driven income math', () => {
+  it('income range sums per-class contributions over picked classes only', () => {
+    const inputs = baseInputsWithPicks({
+      A: {
+        preset: 'cons',
+        classes: {
+          savings_account: { share: 400_000 },
+          term_deposit:    { share: 200_000 },
+        },
+      },
+      B: { preset: 'cons', classes: {} },
+      C: { preset: 'bal',  classes: {} },
+    });
+    const today = new Date(Date.UTC(2026, 4, 16));
+    const result = allocate(inputs, today);
+
+    // A is 30 days, CBR 16
+    // savings_account: 400_000 × (13.0..15.0)/100 × 30/365 = 4273.97 .. 4931.50
+    // term_deposit:    200_000 × (15.5..17.5)/100 × 30/365 = 2547.95 .. 2876.71
+    expect(result.layers.A.incomeRangeRub.low).toBeCloseTo(6821.92, 1);
+    expect(result.layers.A.incomeRangeRub.high).toBeCloseTo(7808.22, 1);
+    expect(result.layers.A.incomeMidRub).toBeCloseTo(7315.07, 1);
+  });
+
+  it('exposes pickedClasses with per-class income breakdown', () => {
+    const inputs = baseInputsWithPicks({
+      A: { preset: 'cons', classes: { savings_account: { share: 600_000 } } },
+      B: { preset: 'cons', classes: {} },
+      C: { preset: 'bal',  classes: {} },
+    });
+    const today = new Date(Date.UTC(2026, 4, 16));
+    const result = allocate(inputs, today);
+    expect(result.layers.A.pickedClasses).toHaveLength(1);
+    const p = result.layers.A.pickedClasses[0];
+    expect(p.cls.id).toBe('savings_account');
+    expect(p.share).toBe(600_000);
+    expect(p.incomeLow).toBeCloseTo(600_000 * 0.13 * 30 / 365, 2);
+    expect(p.incomeHigh).toBeCloseTo(600_000 * 0.15 * 30 / 365, 2);
+  });
+
+  it('unallocatedRub is layer amount minus sum of shares', () => {
+    const inputs = baseInputsWithPicks({
+      A: { preset: 'custom', classes: { savings_account: { share: 300_000 } } },
+      B: { preset: 'cons', classes: {} },
+      C: { preset: 'bal',  classes: {} },
+    });
+    const today = new Date(Date.UTC(2026, 4, 16));
+    const result = allocate(inputs, today);
+    expect(result.layers.A.unallocatedRub).toBe(300_000);
+    expect(result.layers.A.overAllocatedRub).toBe(0);
+  });
+
+  it('overAllocatedRub surfaces when shares exceed layer amount', () => {
+    const inputs = baseInputsWithPicks({
+      A: {
+        preset: 'custom',
+        classes: {
+          savings_account: { share: 500_000 },
+          term_deposit:    { share: 200_000 },
+        },
+      },
+      B: { preset: 'cons', classes: {} },
+      C: { preset: 'bal',  classes: {} },
+    });
+    const today = new Date(Date.UTC(2026, 4, 16));
+    const result = allocate(inputs, today);
+    expect(result.layers.A.unallocatedRub).toBe(0);
+    expect(result.layers.A.overAllocatedRub).toBe(100_000);
+  });
+
+  it('silently ignores picks pointing at a class not in current candidates', () => {
+    // ofz_pd is layer B/C only; high regime. Putting it in layer A → not a candidate.
+    const inputs = baseInputsWithPicks({
+      A: {
+        preset: 'custom',
+        classes: {
+          savings_account: { share: 300_000 },
+          ofz_pd:          { share: 300_000 },
+        },
+      },
+      B: { preset: 'cons', classes: {} },
+      C: { preset: 'bal',  classes: {} },
+    });
+    const today = new Date(Date.UTC(2026, 4, 16));
+    const result = allocate(inputs, today);
+    expect(result.layers.A.pickedClasses.map(p => p.cls.id)).toEqual(['savings_account']);
+    expect(result.layers.A.unallocatedRub).toBe(300_000);
+  });
+
+  it('empty picks → income 0 and unallocated = full layer amount', () => {
+    const inputs = baseInputsWithPicks({
+      A: { preset: 'custom', classes: {} },
+      B: { preset: 'cons',   classes: {} },
+      C: { preset: 'bal',    classes: {} },
+    });
+    const today = new Date(Date.UTC(2026, 4, 16));
+    const result = allocate(inputs, today);
+    expect(result.layers.A.incomeRangeRub.low).toBe(0);
+    expect(result.layers.A.incomeRangeRub.high).toBe(0);
+    expect(result.layers.A.unallocatedRub).toBe(600_000);
   });
 });
