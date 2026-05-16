@@ -104,7 +104,7 @@ function layerInfo(
   };
 }
 
-function candidatesFor(layer: LayerKey, regime: ReturnType<typeof regimeFor>): InstrumentClass[] {
+export function candidatesFor(layer: LayerKey, regime: Regime): InstrumentClass[] {
   return INSTRUMENT_CLASSES.filter(c =>
     c.applicableLayers.includes(layer) &&
     c.applicableRegimes.includes(regime),
@@ -179,4 +179,16 @@ export function autoFillFromPreset(
     out[c.id] = { share };
   });
   return out;
+}
+
+export function autoAllocateLayerAmounts(
+  inputs: Pick<Inputs, 'freeCashRub' | 'monthlyFamilyRub' | 'goals' | 'layerOverride'>,
+  today: Date,
+): { A: number; B: number; C: number } {
+  const auto = autoSplit(inputs as Inputs, today);
+  return {
+    A: effectiveAmount(auto.A, inputs.layerOverride.A),
+    B: effectiveAmount(auto.B, inputs.layerOverride.B),
+    C: effectiveAmount(auto.C, inputs.layerOverride.C),
+  };
 }
