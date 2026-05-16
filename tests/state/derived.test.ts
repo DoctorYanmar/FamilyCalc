@@ -17,8 +17,11 @@ function fakeAlloc(midA: number, midB: number, midC: number): AllocationResult {
     amountRub: 0,
     timeDays: 0,
     candidates: [],
+    pickedClasses: [],
     incomeRangeRub: { low: 0, high: 0 },
     incomeMidRub: m,
+    unallocatedRub: 0,
+    overAllocatedRub: 0,
   });
   return {
     regime: 'moderate',
