@@ -39,6 +39,17 @@ export type InstrumentClass = {
 
 export type LayerOverride = { A?: number; B?: number; C?: number };
 
+export type Preset = 'cons' | 'bal' | 'all' | 'custom';
+
+export type ClassPick = { share: number };
+
+export type LayerPicks = {
+  preset: Preset;
+  classes: Record<string, ClassPick>;
+};
+
+export type SavingsPicks = { A: LayerPicks; B: LayerPicks; C: LayerPicks };
+
 export type Inputs = {
   returnDate: ISODate;
   voyageDate: ISODate;
@@ -54,6 +65,7 @@ export type Inputs = {
   cbrRateUpdatedAt: ISODate;
   layerOverride: LayerOverride;
   includeExpectedYield: boolean;
+  savingsPicks: SavingsPicks;
 };
 
 export type GoalEvent = {
@@ -81,8 +93,17 @@ export type LayerInfo = {
   amountRub: number;
   timeDays: number;
   candidates: InstrumentClass[];
+  pickedClasses: Array<{
+    cls: InstrumentClass;
+    share: number;
+    incomeLow: number;
+    incomeHigh: number;
+    incomeMid: number;
+  }>;
   incomeRangeRub: { low: number; high: number };
   incomeMidRub: number;
+  unallocatedRub: number;
+  overAllocatedRub: number;
 };
 
 export type AllocationResult = {
@@ -112,7 +133,7 @@ export type Language = 'ru' | 'en';
 export type Theme = 'dark' | 'light';
 
 export type AppState = {
-  schemaVersion: 2;
+  schemaVersion: 3;
   activeScenarioId: ID;
   scenarios: Record<ID, Scenario>;
   ui: {
