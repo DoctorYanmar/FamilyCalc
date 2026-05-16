@@ -519,7 +519,7 @@ input[type='number'] {
 .goals-list { margin: 0 calc(-1 * var(--gap-5)); }
 .goals-row {
   display: grid;
-  grid-template-columns: var(--goals-cols, minmax(140px, 1.6fr) 110px 100px 130px 130px 36px 36px);
+  grid-template-columns: var(--goals-cols, minmax(140px, 1.6fr) 110px 130px 130px 130px 36px 36px);
   gap: var(--gap-2);
   align-items: center;
   padding: var(--gap-2) var(--gap-5);

@@ -53,7 +53,7 @@
   "goals.amount": "Сумма ₽",
   "goals.mode": "Тип",
   "goals.mode.lump": "разово",
-  "goals.mode.spread": "распределить",
+  "goals.mode.spread": "по частям",
   "goals.date": "Дата",
   "goals.endDate": "Конец",
   "goals.delete": "Удалить",
