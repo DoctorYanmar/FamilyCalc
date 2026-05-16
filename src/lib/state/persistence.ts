@@ -1,4 +1,5 @@
-import type { AppState, Scenario } from '../calc/types';
+import type { AppState, Scenario, SavingsPicks } from '../calc/types';
+import { autoAllocateLayerAmounts, autoFillFromPreset, candidatesFor, regimeFor } from '../calc/allocate';
 
 export const STORAGE_KEY = 'familycalc.state.v1';
 
@@ -27,6 +28,11 @@ function defaultScenario(id: string): Scenario {
       cbrRateUpdatedAt: today,
       layerOverride: {},
       includeExpectedYield: false,
+      savingsPicks: {
+        A: { preset: 'cons', classes: {} },
+        B: { preset: 'cons', classes: {} },
+        C: { preset: 'bal',  classes: {} },
+      },
     },
   };
 }
@@ -36,7 +42,7 @@ export function defaultState(): AppState {
     ? crypto.randomUUID()
     : 'default-' + Math.random().toString(36).slice(2);
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     activeScenarioId: id,
     scenarios: { [id]: defaultScenario(id) },
     ui: { language: 'ru', theme: 'dark', openSections: {} },
@@ -61,9 +67,17 @@ type V1State = {
   ui: { language: string; theme: string; openSections: Record<string, boolean> };
 };
 
-function migrateV1ToV2(raw: V1State): AppState {
+type V2Inputs = Omit<Scenario['inputs'], 'savingsPicks'>;
+type V2State = {
+  schemaVersion: 2;
+  activeScenarioId: string;
+  scenarios: Record<string, { id: string; name: string; createdAt: string; updatedAt: string; inputs: V2Inputs }>;
+  ui: { language: string; theme: string; openSections: Record<string, boolean> };
+};
+
+function migrateV1ToV2(raw: V1State): V2State {
   const today = todayISO();
-  const scenarios: AppState['scenarios'] = {};
+  const scenarios: V2State['scenarios'] = {};
   for (const sid of Object.keys(raw.scenarios)) {
     const old = raw.scenarios[sid];
     const oi = old.inputs;
@@ -82,7 +96,7 @@ function migrateV1ToV2(raw: V1State): AppState {
         assets:           oi.assets,
         rubPerUsd:        oi.rubPerUsd,
         monthlyFamilyRub: oi.monthlyFamilyRub,
-        goals:            oi.goals as AppState['scenarios'][string]['inputs']['goals'],
+        goals:            oi.goals as V2Inputs['goals'],
         freeCashRub:      seededFreeCash,
         horizonDate:      oi.voyageDate,
         cbrKeyRatePct:    16.0,
@@ -96,6 +110,41 @@ function migrateV1ToV2(raw: V1State): AppState {
     schemaVersion: 2,
     activeScenarioId: raw.activeScenarioId,
     scenarios,
+    ui: raw.ui,
+  };
+}
+
+function migrateV2ToV3(raw: V2State): AppState {
+  const today = new Date();
+  const scenarios: AppState['scenarios'] = {};
+  for (const sid of Object.keys(raw.scenarios)) {
+    const old = raw.scenarios[sid];
+    const oi = old.inputs;
+    const amounts = autoAllocateLayerAmounts(oi, today);
+    const regime  = regimeFor(oi.cbrKeyRatePct);
+    const candA = candidatesFor('A', regime);
+    const candB = candidatesFor('B', regime);
+    const candC = candidatesFor('C', regime);
+    const savingsPicks: SavingsPicks = {
+      A: { preset: 'cons', classes: autoFillFromPreset(amounts.A, candA, 'cons') },
+      B: { preset: 'cons', classes: autoFillFromPreset(amounts.B, candB, 'cons') },
+      C: { preset: 'bal',  classes: autoFillFromPreset(amounts.C, candC, 'bal')  },
+    };
+    scenarios[sid] = {
+      id: old.id,
+      name: old.name,
+      createdAt: old.createdAt,
+      updatedAt: old.updatedAt,
+      inputs: {
+        ...oi,
+        savingsPicks,
+      },
+    };
+  }
+  return {
+    schemaVersion: 3,
+    activeScenarioId: raw.activeScenarioId,
+    scenarios,
     ui: raw.ui as AppState['ui'],
   };
 }
@@ -107,9 +156,16 @@ function migrate(raw: unknown): AppState {
     if (typeof s.activeScenarioId !== 'string' || typeof s.scenarios !== 'object' || s.scenarios === null) {
       throw new Error('Invalid state shape');
     }
-    return migrateV1ToV2(s as unknown as V1State);
+    const v2 = migrateV1ToV2(s as unknown as V1State);
+    return migrateV2ToV3(v2);
   }
-  if (s.schemaVersion !== 2) throw new Error(`Unsupported schemaVersion: ${String(s.schemaVersion)}`);
+  if (s.schemaVersion === 2) {
+    if (typeof s.activeScenarioId !== 'string' || typeof s.scenarios !== 'object' || s.scenarios === null) {
+      throw new Error('Invalid state shape');
+    }
+    return migrateV2ToV3(s as unknown as V2State);
+  }
+  if (s.schemaVersion !== 3) throw new Error(`Unsupported schemaVersion: ${String(s.schemaVersion)}`);
   if (typeof s.activeScenarioId !== 'string' || typeof s.scenarios !== 'object' || s.scenarios === null) {
     throw new Error('Invalid state shape');
   }
