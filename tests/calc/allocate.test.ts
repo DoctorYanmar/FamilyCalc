@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { regimeFor } from '../../src/lib/calc/allocate';
 import { allocate } from '../../src/lib/calc/allocate';
-import type { Inputs } from '../../src/lib/calc/types';
+import { autoFillFromPreset } from '../../src/lib/calc/allocate';
+import type { Inputs, InstrumentClass } from '../../src/lib/calc/types';
 
 describe('regimeFor', () => {
   it('returns "low" for rate < 10', () => {
@@ -204,5 +205,66 @@ describe('allocate — tax threshold and АСВ warning', () => {
       cbrKeyRatePct: 16,
     }), today);
     expect(r.asvWarningLayers).not.toContain('A');
+  });
+});
+
+function classOf(id: string, risk: 'cons' | 'std' | 'high'): InstrumentClass {
+  return {
+    id, risk,
+    liquidity: 'daily',
+    cbrOffset: { low: 0, high: 0 },
+    currency: 'RUB',
+    isDeposit: false,
+    applicableLayers: ['A'],
+    applicableRegimes: ['high'],
+  };
+}
+
+describe('autoFillFromPreset', () => {
+  it('splits layer amount equally across all conservative classes when preset=cons', () => {
+    const candidates = [classOf('a', 'cons'), classOf('b', 'cons'), classOf('c', 'std')];
+    const result = autoFillFromPreset(600_000, candidates, 'cons');
+    expect(Object.keys(result).sort()).toEqual(['a', 'b']);
+    expect(result.a.share).toBe(300_000);
+    expect(result.b.share).toBe(300_000);
+  });
+
+  it('includes cons+std for preset=bal', () => {
+    const candidates = [classOf('a', 'cons'), classOf('b', 'std'), classOf('c', 'high')];
+    const result = autoFillFromPreset(900_000, candidates, 'bal');
+    expect(Object.keys(result).sort()).toEqual(['a', 'b']);
+    expect(result.a.share).toBe(450_000);
+    expect(result.b.share).toBe(450_000);
+  });
+
+  it('includes everything for preset=all', () => {
+    const candidates = [classOf('a', 'cons'), classOf('b', 'std'), classOf('c', 'high')];
+    const result = autoFillFromPreset(900_000, candidates, 'all');
+    expect(Object.keys(result).sort()).toEqual(['a', 'b', 'c']);
+    expect(result.a.share).toBe(300_000);
+    expect(result.b.share).toBe(300_000);
+    expect(result.c.share).toBe(300_000);
+  });
+
+  it('last class absorbs rounding remainder so sum equals total exactly', () => {
+    const candidates = [classOf('a', 'cons'), classOf('b', 'cons'), classOf('c', 'cons')];
+    const result = autoFillFromPreset(1_000_000, candidates, 'cons');
+    const sum = result.a.share + result.b.share + result.c.share;
+    expect(sum).toBe(1_000_000);
+    expect(result.a.share).toBe(333_333);
+    expect(result.b.share).toBe(333_333);
+    expect(result.c.share).toBe(333_334);
+  });
+
+  it('returns empty object when filtered set is empty', () => {
+    const candidates = [classOf('a', 'high'), classOf('b', 'std')];
+    const result = autoFillFromPreset(500_000, candidates, 'cons');
+    expect(result).toEqual({});
+  });
+
+  it('returns empty object when amount is zero', () => {
+    const candidates = [classOf('a', 'cons'), classOf('b', 'cons')];
+    const result = autoFillFromPreset(0, candidates, 'cons');
+    expect(result).toEqual({});
   });
 });

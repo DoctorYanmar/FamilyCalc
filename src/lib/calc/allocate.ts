@@ -12,6 +12,9 @@ import type {
   LayerInfo,
   LayerKey,
   InstrumentClass,
+  ClassPick,
+  Preset,
+  Risk,
 } from './types';
 import { INSTRUMENT_CLASSES } from './instrumentClasses';
 
@@ -151,4 +154,29 @@ export function allocate(inputs: Inputs, today: Date): AllocationResult {
     taxThresholdRub,
     asvWarningLayers,
   };
+}
+
+const PRESET_RISK_FILTER: Record<Exclude<Preset, 'custom'>, ReadonlySet<Risk>> = {
+  cons: new Set(['cons']),
+  bal:  new Set(['cons', 'std']),
+  all:  new Set(['cons', 'std', 'high']),
+};
+
+export function autoFillFromPreset(
+  layerAmountRub: number,
+  candidates: InstrumentClass[],
+  preset: Exclude<Preset, 'custom'>,
+): Record<string, ClassPick> {
+  if (layerAmountRub <= 0) return {};
+  const allow = PRESET_RISK_FILTER[preset];
+  const filtered = candidates.filter(c => allow.has(c.risk));
+  if (filtered.length === 0) return {};
+  const base = Math.floor(layerAmountRub / filtered.length);
+  const remainder = layerAmountRub - base * filtered.length;
+  const out: Record<string, ClassPick> = {};
+  filtered.forEach((c, i) => {
+    const share = i === filtered.length - 1 ? base + remainder : base;
+    out[c.id] = { share };
+  });
+  return out;
 }
