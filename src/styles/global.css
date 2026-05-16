@@ -1,5 +1,18 @@
 @import './tokens.css';
 
+/* Layout-only tokens (not part of design tokens, but used across components
+   for the sticky-stack arithmetic). Topbar height depends on its vertical
+   padding + content; bumped down at each topbar breakpoint. */
+:root {
+  --topbar-h: 72px;
+}
+@media (max-width: 720px) {
+  :root { --topbar-h: 60px; }
+}
+@media (max-width: 480px) {
+  :root { --topbar-h: 56px; }
+}
+
 * { box-sizing: border-box; }
 
 html, body {
@@ -450,6 +463,20 @@ input[type='number'] {
   grid-template-columns: 1.4fr 1fr 1fr;
   gap: var(--gap-3);
   margin-bottom: var(--gap-4);
+}
+/* Sticky-pin the KPI strip under the topbar from tablet+ (≥721px).
+   On phones the three stacked tiles would consume too much vertical
+   space, so they scroll naturally instead. Background must be solid so
+   content scrolling underneath doesn't show through the grid gaps. */
+@media (min-width: 721px) {
+  .kpis {
+    position: sticky;
+    top: var(--topbar-h);
+    z-index: 40;
+    background: var(--bg);
+    padding: var(--gap-2) 0;
+    margin-top: calc(-1 * var(--gap-2));
+  }
 }
 .kpi {
   background: var(--bg-elevated);
