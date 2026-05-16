@@ -24,6 +24,7 @@ export type Regime = 'high' | 'moderate' | 'low';
 export type LayerKey = 'A' | 'B' | 'C';
 export type Liquidity = 'daily' | 'fixed-term' | 'secondary-market';
 export type ClassCurrency = 'RUB' | 'USD-settled' | 'CNY' | 'Gold';
+export type Risk = 'cons' | 'std' | 'high';
 
 export type InstrumentClass = {
   id: string;
@@ -33,6 +34,7 @@ export type InstrumentClass = {
   isDeposit: boolean;
   applicableLayers: LayerKey[];
   applicableRegimes: Regime[];
+  risk: Risk;
 };
 
 export type LayerOverride = { A?: number; B?: number; C?: number };

@@ -12,6 +12,7 @@ export const INSTRUMENT_CLASSES: readonly InstrumentClass[] = [
     isDeposit: true,
     applicableLayers: ['A'],
     applicableRegimes: ['high', 'moderate', 'low'],
+    risk: 'cons',
   },
   {
     id: 'term_deposit',
@@ -21,6 +22,7 @@ export const INSTRUMENT_CLASSES: readonly InstrumentClass[] = [
     isDeposit: true,
     applicableLayers: ['A', 'B'],
     applicableRegimes: ['high', 'moderate'],
+    risk: 'cons',
   },
   {
     id: 'mm_fund',
@@ -30,6 +32,7 @@ export const INSTRUMENT_CLASSES: readonly InstrumentClass[] = [
     isDeposit: false,
     applicableLayers: ['A', 'B'],
     applicableRegimes: ['high', 'moderate', 'low'],
+    risk: 'std',
   },
   {
     id: 'ofz_pd',
@@ -39,6 +42,7 @@ export const INSTRUMENT_CLASSES: readonly InstrumentClass[] = [
     isDeposit: false,
     applicableLayers: ['B', 'C'],
     applicableRegimes: ['high'],
+    risk: 'std',
   },
   {
     id: 'ofz_pk',
@@ -48,6 +52,7 @@ export const INSTRUMENT_CLASSES: readonly InstrumentClass[] = [
     isDeposit: false,
     applicableLayers: ['B', 'C'],
     applicableRegimes: ['moderate', 'low'],
+    risk: 'cons',
   },
   {
     id: 'ofz_in',
@@ -57,6 +62,7 @@ export const INSTRUMENT_CLASSES: readonly InstrumentClass[] = [
     isDeposit: false,
     applicableLayers: ['C'],
     applicableRegimes: ['high', 'moderate', 'low'],
+    risk: 'cons',
   },
   {
     id: 'corp_bond',
@@ -66,6 +72,7 @@ export const INSTRUMENT_CLASSES: readonly InstrumentClass[] = [
     isDeposit: false,
     applicableLayers: ['B', 'C'],
     applicableRegimes: ['high', 'moderate'],
+    risk: 'high',
   },
   {
     id: 'replacement_bond',
@@ -75,6 +82,7 @@ export const INSTRUMENT_CLASSES: readonly InstrumentClass[] = [
     isDeposit: false,
     applicableLayers: ['C'],
     applicableRegimes: ['moderate', 'low'],
+    risk: 'high',
   },
   {
     id: 'cny_bond',
@@ -84,6 +92,7 @@ export const INSTRUMENT_CLASSES: readonly InstrumentClass[] = [
     isDeposit: false,
     applicableLayers: ['C'],
     applicableRegimes: ['moderate', 'low'],
+    risk: 'high',
   },
   {
     id: 'gold',
@@ -93,5 +102,6 @@ export const INSTRUMENT_CLASSES: readonly InstrumentClass[] = [
     isDeposit: false,
     applicableLayers: ['C'],
     applicableRegimes: ['high', 'moderate', 'low'],
+    risk: 'high',
   },
 ];
