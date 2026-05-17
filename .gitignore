@@ -30,3 +30,7 @@ lerna-debug.log*
 .env.local
 .claude/
 CLAUDE.md
+
+# Internal dev artifacts (kept locally, not published to the public repo)
+docs/
+design-system/
