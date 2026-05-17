@@ -58,8 +58,21 @@
     max-width: 110px;
     text-align: center;
     background: transparent;
+    box-sizing: border-box;
     /* iOS auto-zoom workaround — at this widget's small size we accept the
        inherited 14px font from .stepper-val above; iOS still won't zoom
        because the widget itself is wider than the standard .input. */
+  }
+  /* On phones the .stepper wrapper goes full-width (global rule). The desktop
+     max-width of 110px would then clamp the value column while the buttons
+     flex-grow to fill the rest, making the buttons look much larger than the
+     input. Drop the clamp on phones so the input absorbs the available width
+     and the ± buttons stay at their min tap-target size (44px). */
+  @media (max-width: 480px) {
+    .stepper > .stepper-val {
+      flex: 1 1 0%;
+      max-width: none;
+      width: auto;
+    }
   }
 </style>

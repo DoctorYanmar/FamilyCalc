@@ -454,7 +454,8 @@ input[type='number'] {
 }
 @media (max-width: 480px) {
   .stepper { width: 100%; }
-  .stepper .stepper-val { flex: 1; }
+  .stepper .stepper-val { flex: 1 1 0%; min-width: 0; }
+  .stepper button { flex: 0 0 44px; min-width: 44px; padding: 0; }
 }
 
 /* ────────── KPI tiles ────────── */
@@ -506,10 +507,19 @@ input[type='number'] {
   color: var(--fg);
 }
 .kpi.hero .kpi-val {
-  background: linear-gradient(180deg, var(--fg), color-mix(in srgb, var(--primary) 70%, var(--fg)) 200%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--fg);
+}
+/* Reserve the gradient flourish for wide viewports where the cropped
+   gradient does not clip the readable region. On phones the gradient
+   makes the value low-contrast on dark theme and grey-on-grey on
+   light theme. */
+@media (min-width: 901px) {
+  .kpi.hero .kpi-val {
+    background: linear-gradient(180deg, var(--fg), color-mix(in srgb, var(--primary) 70%, var(--fg)) 200%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 .kpi-sub {
   display: flex; align-items: baseline; gap: 8px;
