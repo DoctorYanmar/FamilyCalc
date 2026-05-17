@@ -534,12 +534,13 @@ input[type='number'] {
 /* ────────── Two-column section grid ────────── */
 .grid-2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--gap-4);
 }
+.grid-2 > * { min-width: 0; }
 .span-2 { grid-column: 1 / -1; }
 @media (max-width: 900px) {
-  .grid-2 { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ────────── List of items (Goals) ────────── */
@@ -781,7 +782,8 @@ input[type='number'] {
 
 /* ────────── Layer presets row ────────── */
 .layer-presets {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -790,6 +792,7 @@ input[type='number'] {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   align-self: flex-start;
+  max-width: 100%;
 }
 .layer-presets button {
   background: transparent;
@@ -798,6 +801,10 @@ input[type='number'] {
   cursor: pointer;
   border-right: 1px solid var(--border);
   font-family: inherit; font-size: inherit; letter-spacing: inherit;
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
+  white-space: nowrap;
 }
 .layer-presets button:last-child { border-right: 0; }
 .layer-presets button.active { background: var(--surface-1); color: var(--fg); }
@@ -842,6 +849,57 @@ input[type='number'] {
 .risk-badge.std  { background: rgba(59,130,246,0.14); color: var(--primary); }
 .risk-badge.high { background: rgba(245,158,11,0.14); color: var(--warn); }
 
+.class-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--fg-2);
+}
+.class-name .nm {
+  min-width: 0;
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.class-name .risk-badge { flex-shrink: 0; }
+
+.class-meta {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--fg-4);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.class-meta .yld {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.layer.b .class-meta .yld { color: var(--primary); }
+.layer.c .class-meta .yld { color: var(--warn); }
+.class-meta .sep { color: var(--fg-4); }
+
+.class-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.class-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .share-input {
   width: 84px;
   background: transparent;
@@ -879,6 +937,8 @@ input[type='number'] {
   font-size: var(--t-small);
   color: var(--fg-2);
   line-height: 1.55;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .class-edu dt {
   font-family: var(--mono); font-size: var(--t-micro);
@@ -956,16 +1016,23 @@ input[type='number'] {
   .report-head { padding: var(--gap-3) var(--gap-4); }
   .report-foot { padding: var(--gap-3) var(--gap-4); }
   .layer-class {
-    grid-template-columns: 18px 1fr auto;
+    grid-template-columns: 18px minmax(0, 1fr) auto;
     grid-template-areas:
       "cb name right"
       ".  meta meta";
     row-gap: 4px;
   }
   .layer-class .cb        { grid-area: cb; }
-  .layer-class .class-main{ grid-area: name; }
-  .layer-class .class-meta{ grid-area: meta; }
+  .layer-class .class-main{ grid-area: name; min-width: 0; }
+  .layer-class .class-meta{ grid-area: meta; min-width: 0; flex-wrap: wrap; }
   .layer-class .class-right{ grid-area: right; }
+  .class-edu {
+    margin: 6px calc(-1 * var(--gap-4)) var(--gap-2);
+    padding: var(--gap-3) var(--gap-4);
+  }
+  .layer-presets { width: 100%; font-size: 10px; }
+  .layer-presets button { padding: 6px 4px; }
+  .share-input { width: 72px; }
 }
 
 /* ────────── Breakdown table ────────── */
