@@ -4,13 +4,13 @@
    for the sticky-stack arithmetic). Topbar height depends on its vertical
    padding + content; bumped down at each topbar breakpoint. */
 :root {
-  --topbar-h: 72px;
+  --topbar-h: calc(72px + env(safe-area-inset-top));
 }
 @media (max-width: 720px) {
-  :root { --topbar-h: 60px; }
+  :root { --topbar-h: calc(60px + env(safe-area-inset-top)); }
 }
 @media (max-width: 480px) {
-  :root { --topbar-h: 56px; }
+  :root { --topbar-h: calc(56px + env(safe-area-inset-top)); }
 }
 
 * { box-sizing: border-box; }
@@ -70,12 +70,24 @@ a { color: var(--primary); }
 .app-shell {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 var(--gap-6) var(--gap-12);
+  /* Side padding honours landscape iPhone safe areas so content never
+     slides behind the curved edge / camera bar in landscape mode. */
+  padding:
+    0
+    max(var(--gap-6), env(safe-area-inset-right))
+    calc(var(--gap-12) + env(safe-area-inset-bottom))
+    max(var(--gap-6), env(safe-area-inset-left));
   position: relative;
   z-index: 1;
 }
 @media (max-width: 640px) {
-  .app-shell { padding: 0 var(--gap-3) var(--gap-8); }
+  .app-shell {
+    padding:
+      0
+      max(var(--gap-3), env(safe-area-inset-right))
+      calc(var(--gap-8) + env(safe-area-inset-bottom))
+      max(var(--gap-3), env(safe-area-inset-left));
+  }
 }
 
 /* ────────── Topbar ────────── */
@@ -83,7 +95,12 @@ a { color: var(--primary); }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--gap-5) 0 var(--gap-4);
+  /* Add iPhone notch / Dynamic Island clearance via safe-area-inset.
+     On non-PWA / non-iPhone the inset resolves to 0, so this is a no-op
+     on desktop. In PWA mode (launched from home screen) the inset
+     pushes the topbar content down so it doesn't overlap with the
+     time / battery / wifi indicators rendered behind it. */
+  padding: calc(var(--gap-5) + env(safe-area-inset-top)) 0 var(--gap-4);
   border-bottom: 1px solid var(--border);
   gap: var(--gap-3);
   position: sticky;
@@ -140,14 +157,14 @@ a { color: var(--primary); }
   .clock, .divider-v { display: none; }
 }
 @media (max-width: 720px) {
-  .topbar { padding: var(--gap-3) 0; }
+  .topbar { padding: calc(var(--gap-3) + env(safe-area-inset-top)) 0 var(--gap-3); }
   .topbar-tools { gap: 6px; }
   .btn .btn-label { display: none; }
   .btn { padding: 8px; }
 }
 @media (max-width: 480px) {
   .topbar {
-    padding: 10px 0;
+    padding: calc(10px + env(safe-area-inset-top)) 0 10px;
     gap: var(--gap-2);
     align-items: center;
   }
@@ -344,7 +361,7 @@ a { color: var(--primary); }
 }
 .input.text { text-align: left; font-family: var(--sans); font-size: var(--t-med); }
 .input.date {
-  text-align: left;
+  text-align: center;
   font-family: var(--mono);
   font-size: var(--t-med);
   /* iOS Safari renders <input type="date"> with native chrome that
@@ -355,11 +372,18 @@ a { color: var(--primary); }
   -webkit-appearance: none;
   appearance: none;
   min-height: 40px;
+  /* iOS Safari renders the date as an inline-block with its own
+     content-box that defaults to left-alignment regardless of the
+     parent text-align. Use flex so we can centre the inner value. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 /* iOS adds a hidden ::-webkit-date-and-time-value with its own
-   line-height + padding that can grow the field. Pin it. */
+   line-height + padding that can grow the field. Pin and centre it. */
 .input.date::-webkit-date-and-time-value {
-  text-align: left;
+  text-align: center;
+  margin: 0 auto;
   min-height: 1em;
 }
 .input.date::-webkit-calendar-picker-indicator { opacity: 0.5; }
