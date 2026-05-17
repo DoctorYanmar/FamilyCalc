@@ -2,28 +2,32 @@
   import { _ } from 'svelte-i18n';
   import { app, activeInputs, persistSoon } from '../../../lib/state/scenarios.svelte';
   import { currentResult } from '../../../lib/state/derived';
+  import { autoFillFromPreset } from '../../../lib/calc/allocate';
   import { formatRub } from '../../../lib/format';
-  import type { LayerKey } from '../../../lib/calc/types';
-  import ClassCard from './ClassCard.svelte';
+  import type { LayerKey, Preset } from '../../../lib/calc/types';
+  import ClassRow from './ClassRow.svelte';
 
   let { layer }: { layer: LayerKey } = $props();
 
+  const LAYER_DEFAULT_PRESET: Record<LayerKey, Exclude<Preset, 'custom'>> = {
+    A: 'cons', B: 'cons', C: 'bal',
+  };
+
+  let expandedClassId = $state<string | null>(null);
+
   const inputs = $derived(activeInputs());
   const result = $derived(currentResult());
-  const info = $derived(result.alloc.layers[layer]);
-  const overridden = $derived(inputs.layerOverride[layer] !== undefined);
+  const info   = $derived(result.alloc.layers[layer]);
+  const picks  = $derived(inputs.savingsPicks[layer]);
 
-  const share = $derived(inputs.freeCashRub > 0 ? info.amountRub / inputs.freeCashRub : 0);
-  const sharePct = $derived(Math.round(share * 100));
-
-  function layerShortName(full: string): string {
+  function shortName(full: string): string {
     const idx = full.indexOf('·');
     return idx >= 0 ? full.slice(idx + 1).trim() : full;
   }
 
   function onAmount(e: Event) {
-    const target = e.target as HTMLInputElement;
-    const raw = target.value.replace(/\s/g, '');
+    const t = e.target as HTMLInputElement;
+    const raw = t.value.replace(/\s/g, '');
     const n = Number(raw);
     if (!Number.isNaN(n) && n >= 0) {
       inputs.layerOverride = { ...inputs.layerOverride, [layer]: n };
@@ -31,11 +35,64 @@
     }
   }
 
-  function resetToAuto() {
-    const next = { ...inputs.layerOverride };
-    delete next[layer];
-    inputs.layerOverride = next;
+  function applyPreset(p: Exclude<Preset, 'custom'>) {
+    const classes = autoFillFromPreset(info.amountRub, info.candidates, p);
+    inputs.savingsPicks = {
+      ...inputs.savingsPicks,
+      [layer]: { preset: p, classes },
+    };
     persistSoon();
+  }
+
+  function resetToLayerDefault() {
+    applyPreset(LAYER_DEFAULT_PRESET[layer]);
+  }
+
+  function toggleClass(id: string) {
+    const current = picks.classes;
+    const next: typeof current = { ...current };
+    if (id in next) {
+      delete next[id];
+    } else {
+      next[id] = { share: 0 };
+    }
+    inputs.savingsPicks = {
+      ...inputs.savingsPicks,
+      [layer]: { preset: 'custom', classes: next },
+    };
+    persistSoon();
+  }
+
+  function changeShare(id: string, n: number) {
+    const next = { ...picks.classes, [id]: { share: n } };
+    inputs.savingsPicks = {
+      ...inputs.savingsPicks,
+      [layer]: { preset: 'custom', classes: next },
+    };
+    persistSoon();
+  }
+
+  function balanceRemainder() {
+    const remainder = info.unallocatedRub;
+    if (remainder <= 0) return;
+    const ids = Object.keys(picks.classes);
+    if (ids.length === 0) return;
+    const per = Math.floor(remainder / ids.length);
+    const leftover = remainder - per * ids.length;
+    const next = { ...picks.classes };
+    ids.forEach((id, i) => {
+      const add = i === ids.length - 1 ? per + leftover : per;
+      next[id] = { share: next[id].share + add };
+    });
+    inputs.savingsPicks = {
+      ...inputs.savingsPicks,
+      [layer]: { preset: 'custom', classes: next },
+    };
+    persistSoon();
+  }
+
+  function toggleExpand(id: string) {
+    expandedClassId = expandedClassId === id ? null : id;
   }
 </script>
 
@@ -43,13 +100,7 @@
   <div class="layer-head">
     <div class="layer-tag">
       <span class="swatch"></span>
-      {layer} · {layerShortName($_(`savings.layer.${layer}.name`))}
-    </div>
-    <div class="layer-share-row">
-      {#if overridden}
-        <button class="reset-btn" type="button" onclick={resetToAuto} title={$_('savings.layerCard.resetToAuto')} aria-label={$_('savings.layerCard.resetToAuto')}>↺</button>
-      {/if}
-      <span class="layer-share">{sharePct}%</span>
+      {layer} · {shortName($_(`savings.layer.${layer}.name`))}
     </div>
   </div>
 
@@ -65,32 +116,62 @@
     aria-label={$_('savings.layerCard.amount')}
   />
 
-  <div class="layer-bar"><div style="width: {sharePct}%"></div></div>
+  <div class="layer-bar">
+    <div style="width: {inputs.freeCashRub > 0 ? Math.round(info.amountRub * 100 / inputs.freeCashRub) : 0}%"></div>
+  </div>
+
+  <div class="preset-bar">
+    <div class="layer-presets">
+      <button class:active={picks.preset === 'cons'} type="button" onclick={() => applyPreset('cons')}>{$_('savings.preset.cons')}</button>
+      <button class:active={picks.preset === 'bal'}  type="button" onclick={() => applyPreset('bal')}>{$_('savings.preset.bal')}</button>
+      <button class:active={picks.preset === 'all'}  type="button" onclick={() => applyPreset('all')}>{$_('savings.preset.all')}</button>
+    </div>
+    {#if picks.preset === 'custom'}
+      <button class="preset-reset" type="button" onclick={resetToLayerDefault} title={$_('savings.preset.resetTooltip')} aria-label={$_('savings.preset.resetTooltip')}>↺</button>
+    {/if}
+  </div>
 
   {#if info.candidates.length === 0}
-    <p class="layer-empty-mini">{$_('savings.layerCard.noCandidates')}</p>
+    <p class="layer-empty">{$_('savings.layerCard.noCandidates')}</p>
   {:else}
     <div class="layer-classes">
       {#each info.candidates as cls (cls.id)}
-        <ClassCard cls={cls} cbrPct={inputs.cbrKeyRatePct} />
+        <ClassRow
+          cls={cls}
+          pick={picks.classes[cls.id]}
+          cbrPct={inputs.cbrKeyRatePct}
+          expanded={expandedClassId === cls.id}
+          onToggle={() => toggleClass(cls.id)}
+          onShareChange={(n: number) => changeShare(cls.id, n)}
+          onExpandToggle={() => toggleExpand(cls.id)}
+        />
       {/each}
     </div>
   {/if}
 
   <div class="layer-foot">
-    <span class="foot-lbl">{$_('savings.layerCard.expectedIncome')}</span>
-    {#if info.incomeRangeRub.high <= 0}
-      <span class="foot-val foot-empty" title={$_('savings.layerCard.noIncomeHint')}>—</span>
-    {:else}
-      <span class="foot-val">{formatRub(info.incomeRangeRub.low, app.ui.language)} – {formatRub(info.incomeRangeRub.high, app.ui.language)}</span>
-    {/if}
+    <span class="lbl">{$_('savings.layerCard.expectedIncomeMid')}</span>
+    <span class="vals">
+      {#if info.incomeMidRub > 0}
+        <span class="val-big">≈ {formatRub(info.incomeMidRub, app.ui.language)}</span>
+        <span class="val-rng">{$_('savings.layerCard.expectedIncomeRange')} {formatRub(info.incomeRangeRub.low, app.ui.language)} – {formatRub(info.incomeRangeRub.high, app.ui.language)}</span>
+      {:else}
+        <span class="val-big foot-empty">—</span>
+      {/if}
+      {#if info.overAllocatedRub > 0}
+        <span class="unalloc-pill over">{$_('savings.unalloc.over', { values: { amount: formatRub(info.overAllocatedRub, app.ui.language) } })}</span>
+      {:else if info.unallocatedRub > 0}
+        <button class="unalloc-pill warn" type="button" onclick={balanceRemainder} title={$_('savings.layerCard.balanceUnallocated')}>
+          {$_('savings.unalloc.warn', { values: { amount: formatRub(info.unallocatedRub, app.ui.language) } })}
+        </button>
+      {:else}
+        <span class="unalloc-pill ok">{$_('savings.unalloc.ok')}</span>
+      {/if}
+    </span>
   </div>
 </div>
 
 <style>
-  /* Override the global .layer-amt span style by using an input that
-     looks like the big number but is editable. all:unset strips native
-     input chrome; the rules below re-apply the layer-amt visual rhythm. */
   .layer-amt-input {
     all: unset;
     font-family: var(--mono);
@@ -106,37 +187,11 @@
     cursor: text;
     box-sizing: border-box;
   }
-  .layer-amt-input:hover  { border-bottom-color: var(--border); }
-  .layer-amt-input:focus  { border-bottom-color: var(--primary); outline: none; }
+  .layer-amt-input:hover { border-bottom-color: var(--border); }
+  .layer-amt-input:focus { border-bottom-color: var(--primary); outline: none; }
   .layer-amt-input::placeholder { color: var(--fg-4); }
 
-  .layer-share-row {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--gap-2);
-  }
-  .reset-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--fg-4);
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    font-size: var(--t-med);
-    line-height: 1;
-    border-radius: var(--radius-sm);
-    transition: color 150ms ease, border-color 150ms ease;
-    padding: 0;
-  }
-  .reset-btn:hover { color: var(--primary); border-color: var(--primary); }
-
-  .layer-empty-mini {
-    color: var(--fg-4);
-    font-size: var(--t-small);
-    margin: 0;
-    padding: var(--gap-2) 0;
-    text-align: center;
-  }
+  .preset-bar { display: flex; align-items: center; }
 
   .layer-foot {
     display: flex;
@@ -145,17 +200,30 @@
     padding-top: var(--gap-2);
     border-top: 1px dashed var(--border);
     font-size: var(--t-small);
+    flex-wrap: wrap;
+    gap: 8px;
   }
-  .foot-lbl { color: var(--fg-3); }
-  .foot-val {
+  .layer-foot .lbl {
+    color: var(--fg-3);
+    font-family: var(--mono);
+    font-size: var(--t-mini);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .layer-foot .vals { display: inline-flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .layer-foot .val-big {
     color: var(--accent);
     font-family: var(--mono);
+    font-size: var(--t-lg);
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
-  .foot-val.foot-empty {
+  :global(.layer.b) .layer-foot .val-big { color: var(--primary); }
+  :global(.layer.c) .layer-foot .val-big { color: var(--warn); }
+  .layer-foot .val-rng {
+    font-family: var(--mono);
+    font-size: var(--t-mini);
     color: var(--fg-4);
-    cursor: help;
   }
-  .layer.b .foot-val:not(.foot-empty) { color: var(--primary); }
-  .layer.c .foot-val:not(.foot-empty) { color: var(--warn); }
+  .foot-empty { color: var(--fg-4); }
 </style>
