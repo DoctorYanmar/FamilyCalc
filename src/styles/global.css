@@ -343,7 +343,26 @@ a { color: var(--primary); }
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 .input.text { text-align: left; font-family: var(--sans); font-size: var(--t-med); }
-.input.date { text-align: left; font-family: var(--mono); font-size: var(--t-med); }
+.input.date {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: var(--t-med);
+  /* iOS Safari renders <input type="date"> with native chrome that
+     extends past the CSS width, making the date input render wider
+     than its sibling controls. Strip the native appearance so the
+     input uses our box model; the native date-picker overlay still
+     opens on tap. */
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 40px;
+}
+/* iOS adds a hidden ::-webkit-date-and-time-value with its own
+   line-height + padding that can grow the field. Pin it. */
+.input.date::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1em;
+}
+.input.date::-webkit-calendar-picker-indicator { opacity: 0.5; }
 .input::placeholder { color: var(--fg-4); }
 .input:focus, .select:focus {
   outline: none;
@@ -539,6 +558,27 @@ input[type='number'] {
   .kpi.hero { grid-column: auto; }
   .kpi { padding: var(--gap-4); }
   .kpi-val { font-size: var(--t-3xl); }
+}
+
+/* On phones the hero KPI ("Balance at voyage") stays pinned under the
+   topbar while the user scrolls through inputs. The two secondary tiles
+   (Runway, Monthly expenses) scroll away normally — the hero is the
+   one number you watch as you edit assumptions.
+
+   Technique: display: contents on .kpis removes it from layout, so its
+   .kpi children become direct children of .app-shell. Sticky scope for
+   .kpi.hero is then the full page, not the .kpis block. */
+@media (max-width: 720px) {
+  .kpis { display: contents; }
+  .kpi { margin-bottom: var(--gap-3); }
+  .kpi.hero {
+    position: sticky;
+    top: var(--topbar-h);
+    z-index: 40;
+    background:
+      linear-gradient(135deg, rgba(59,130,246,0.10), rgba(16,185,129,0.06) 100%),
+      var(--bg-elevated);
+  }
 }
 
 /* ────────── Two-column section grid ────────── */

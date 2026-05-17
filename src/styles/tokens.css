@@ -32,6 +32,7 @@
 }
 
 :root[data-theme='dark'] {
+  color-scheme: dark;
   --bg:           #0F172A;
   --bg-elevated:  #131D33;
   --surface-1:    #1A2540;
@@ -55,6 +56,7 @@
 }
 
 :root[data-theme='light'] {
+  color-scheme: light;
   --bg:           #FFFFFF;
   --bg-elevated:  #F8FAFC;
   --surface-1:    #F1F5F9;
