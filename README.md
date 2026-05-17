@@ -16,21 +16,3 @@ npm run dev          # http://localhost:5173
 npm run build        # outputs dist/
 npm run preview      # serve dist/ locally
 ```
-
-## Test
-
-```
-npm test             # vitest
-```
-
-## Deploy to GitHub Pages (no Actions used)
-
-```
-npm run deploy       # builds and pushes dist/ to gh-pages branch
-```
-
-Then enable GitHub Pages in repo Settings → Pages → Source: `gh-pages` branch.
-
-## Architecture
-
-See `docs/superpowers/specs/2026-05-14-family-calc-design.md`.
