@@ -1,16 +1,11 @@
 import type { Language, ISODate } from './calc/types';
 
-export function formatRub(n: number, lang: Language): string {
-  if (lang === 'ru') {
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: 'RUB',
-      maximumFractionDigits: 0,
-    }).format(Math.round(n));
-  }
-  return new Intl.NumberFormat('en-US', {
+export function formatLocal(n: number, lang: Language, currencyCode: string): string {
+  return new Intl.NumberFormat(lang === 'ru' ? 'ru-RU' : 'en-US', {
+    style: 'currency',
+    currency: currencyCode,
     maximumFractionDigits: 0,
-  }).format(Math.round(n)) + ' LC';
+  }).format(Math.round(n));
 }
 
 export function formatUsd(n: number, lang: Language): string {
