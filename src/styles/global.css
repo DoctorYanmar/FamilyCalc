@@ -733,7 +733,7 @@ input[type='number'] {
 .breakdown td.label { font-family: var(--sans); color: var(--fg); }
 .breakdown td.amount { text-align: right; }
 .breakdown th:last-child,
-.breakdown td:last-child { padding-right: var(--gap-5); }
+.breakdown td:last-child { padding-right: 40px; }
 .breakdown td .tag {
   background: var(--surface-1);
   color: var(--fg-3);
