@@ -41,6 +41,7 @@ function baseInputs(overrides: Partial<Inputs> = {}): Inputs {
     layerOverride: {},
     includeExpectedYield: false,
     savingsPicks: EMPTY_PICKS,
+    savingsInstruments: [],
     ...overrides,
   };
 }
@@ -289,6 +290,7 @@ function baseInputsWithPicks(picks: Inputs['savingsPicks']): Inputs {
     layerOverride: { A: 600_000, B: 400_000, C: 0 },
     includeExpectedYield: false,
     savingsPicks: picks,
+    savingsInstruments: [],
   };
 }
 

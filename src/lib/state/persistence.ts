@@ -33,6 +33,7 @@ function defaultScenario(id: string): Scenario {
         B: { preset: 'cons', classes: {} },
         C: { preset: 'bal',  classes: {} },
       },
+      savingsInstruments: [],
     },
   };
 }
@@ -103,6 +104,7 @@ function migrateV1ToV2(raw: V1State): V2State {
         cbrRateUpdatedAt: today,
         layerOverride:    {},
         includeExpectedYield: false,
+        savingsInstruments: [],
       },
     };
   }

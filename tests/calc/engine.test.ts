@@ -23,6 +23,7 @@ const emptyInputs = (): Inputs => ({
   layerOverride: {},
   includeExpectedYield: false,
   savingsPicks: EMPTY_PICKS,
+  savingsInstruments: [],
 });
 
 describe('simulate — monthly expenses', () => {

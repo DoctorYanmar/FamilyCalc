@@ -20,6 +20,29 @@ export type Goal = {
   enabled: boolean;
 };
 
+export type Compounding = 'daily' | 'monthly' | 'at-maturity';
+
+export type SavingsTemplateId =
+  | 'savings_account'
+  | 'term_deposit'
+  | 'mm_fund'
+  | 'ofz_pd'
+  | 'ofz_pk'
+  | 'corp_bond'
+  | 'custom';
+
+export type SavingsInstrument = {
+  id: ID;
+  name: string;
+  templateId: SavingsTemplateId;
+  amountRub: number;
+  annualRatePct: number;
+  startDate: ISODate;
+  termMonths: number | null;
+  compounding: Compounding;
+  enabled: boolean;
+};
+
 export type Regime = 'high' | 'moderate' | 'low';
 export type LayerKey = 'A' | 'B' | 'C';
 export type Liquidity = 'daily' | 'fixed-term' | 'secondary-market';
@@ -66,6 +89,7 @@ export type Inputs = {
   layerOverride: LayerOverride;
   includeExpectedYield: boolean;
   savingsPicks: SavingsPicks;
+  savingsInstruments: SavingsInstrument[];
 };
 
 export type GoalEvent = {
