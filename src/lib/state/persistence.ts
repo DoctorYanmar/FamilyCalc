@@ -152,8 +152,8 @@ type V3State = {
   ui: { language: string; theme: string; openSections: Record<string, boolean> };
 };
 
-function migrateV3ToV4(raw: V3State): AppState {
-  const scenarios: AppState['scenarios'] = {};
+function migrateV3ToV4(raw: V3State): V4State {
+  const scenarios: V4State['scenarios'] = {};
   for (const sid of Object.keys(raw.scenarios)) {
     const old = raw.scenarios[sid];
     const oi = old.inputs;

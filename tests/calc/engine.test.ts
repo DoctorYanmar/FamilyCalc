@@ -13,6 +13,7 @@ const emptyInputs = (): Inputs => ({
   goals: [],
   includeExpectedYield: false,
   savingsInstruments: [],
+  localCurrency: 'RUB',
 });
 
 describe('simulate — monthly expenses', () => {
