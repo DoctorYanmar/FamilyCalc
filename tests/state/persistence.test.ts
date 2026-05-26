@@ -8,7 +8,7 @@ describe('persistence — localStorage', () => {
 
   it('loadState returns defaultState when storage empty', () => {
     const s = loadState();
-    expect(s.schemaVersion).toBe(4);
+    expect(s.schemaVersion).toBe(5);
     expect(Object.keys(s.scenarios)).toHaveLength(1);
   });
 
@@ -23,7 +23,7 @@ describe('persistence — localStorage', () => {
   it('falls back to defaultState on corrupted JSON', () => {
     localStorage.setItem(STORAGE_KEY, 'not-json{{{');
     const s = loadState();
-    expect(s.schemaVersion).toBe(4);
+    expect(s.schemaVersion).toBe(5);
   });
 });
 
@@ -36,7 +36,7 @@ describe('persistence — JSON export/import', () => {
     const json = exportJson(s);
     const parsed = importJson(json);
     expect(parsed.ui.theme).toBe('light');
-    expect(parsed.schemaVersion).toBe(4);
+    expect(parsed.schemaVersion).toBe(5);
   });
 
   it('importJson rejects invalid JSON', () => {
@@ -79,7 +79,7 @@ describe('migrate v1 → v3 (chained)', () => {
       ui: { language: 'ru', theme: 'dark', openSections: {} },
     };
     const v4 = importJson(JSON.stringify(v1));
-    expect(v4.schemaVersion).toBe(4);
+    expect(v4.schemaVersion).toBe(5);
     const inp = v4.scenarios.s1.inputs as any;
     expect(inp.investments).toBeUndefined();
     expect('freeCashRub' in inp).toBe(false);
@@ -114,7 +114,7 @@ describe('migrate v1 → v3 (chained)', () => {
       ui: { language: 'en', theme: 'light', openSections: {} },
     };
     const out = importJson(JSON.stringify(v3));
-    expect(out.schemaVersion).toBe(4);
+    expect(out.schemaVersion).toBe(5);
     const i = out.scenarios.s1.inputs as unknown as Record<string, unknown>;
     expect('freeCashRub'      in i).toBe(false);
     expect('horizonDate'      in i).toBe(false);
@@ -147,7 +147,7 @@ describe('migrate v1 → v3 (chained)', () => {
       ui: { language: 'ru', theme: 'dark', openSections: {} },
     };
     const v4 = importJson(JSON.stringify(v2));
-    expect(v4.schemaVersion).toBe(4);
+    expect(v4.schemaVersion).toBe(5);
     const inp = v4.scenarios.s1.inputs as any;
     expect('savingsPicks' in inp).toBe(false);
     expect('freeCashRub'  in inp).toBe(false);
@@ -182,7 +182,7 @@ describe('migrate v3 → v4', () => {
       ui: { language: 'ru', theme: 'dark', openSections: {} },
     });
     const out = importJson(v3);
-    expect(out.schemaVersion).toBe(4);
+    expect(out.schemaVersion).toBe(5);
     const i = out.scenarios['a'].inputs as unknown as Record<string, unknown>;
     expect('freeCashRub'      in i).toBe(false);
     expect('horizonDate'      in i).toBe(false);
@@ -234,7 +234,52 @@ describe('migrate v3 → v4', () => {
       ui: { language: 'ru', theme: 'dark', openSections: {} },
     });
     const out = importJson(v1);
-    expect(out.schemaVersion).toBe(4);
+    expect(out.schemaVersion).toBe(5);
     expect(Array.isArray(out.scenarios['a'].inputs.savingsInstruments)).toBe(true);
+  });
+});
+
+describe('migrate v4 → v5', () => {
+  it('adds localCurrency RUB to all scenarios', () => {
+    const v4 = JSON.stringify({
+      schemaVersion: 4,
+      activeScenarioId: 'a',
+      scenarios: {
+        a: {
+          id: 'a', name: 'X', createdAt: '2026-05-01', updatedAt: '2026-05-01',
+          inputs: {
+            returnDate: '2026-05-01', voyageDate: '2026-08-01', salaryLumpSumUsd: 0,
+            assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 }, rubPerUsd: 90,
+            monthlyFamilyRub: 80_000, goals: [], includeExpectedYield: true,
+            savingsInstruments: [],
+          },
+        },
+      },
+      ui: { language: 'ru', theme: 'dark', openSections: {} },
+    });
+    const out = importJson(v4);
+    expect(out.schemaVersion).toBe(5);
+    expect(out.scenarios['a'].inputs.localCurrency).toBe('RUB');
+  });
+
+  it('v1 → v5 full chain adds localCurrency', () => {
+    const v1 = JSON.stringify({
+      schemaVersion: 1,
+      activeScenarioId: 'a',
+      scenarios: {
+        a: {
+          id: 'a', name: 'X', createdAt: '2026-05-01', updatedAt: '2026-05-01',
+          inputs: {
+            returnDate: '2026-05-01', voyageDate: '2026-08-01', salaryLumpSumUsd: 0,
+            assets: { usdBank: 0, usdCash: 0, rubBank: 0 }, rubPerUsd: 90,
+            monthlyFamilyRub: 0, goals: [], investments: [],
+          },
+        },
+      },
+      ui: { language: 'ru', theme: 'dark', openSections: {} },
+    });
+    const out = importJson(v1);
+    expect(out.schemaVersion).toBe(5);
+    expect(out.scenarios['a'].inputs.localCurrency).toBe('RUB');
   });
 });

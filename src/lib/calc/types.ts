@@ -53,6 +53,7 @@ export type Inputs = {
   goals: Goal[];
   includeExpectedYield: boolean;
   savingsInstruments: SavingsInstrument[];
+  localCurrency: string;
 };
 
 export type GoalEvent = {
@@ -95,7 +96,7 @@ export type Language = 'ru' | 'en';
 export type Theme = 'dark' | 'light';
 
 export type AppState = {
-  schemaVersion: 4;
+  schemaVersion: 5;
   activeScenarioId: ID;
   scenarios: Record<ID, Scenario>;
   ui: {
