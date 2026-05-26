@@ -43,7 +43,7 @@ export function defaultState(): AppState {
     ? crypto.randomUUID()
     : 'default-' + Math.random().toString(36).slice(2);
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     activeScenarioId: id,
     scenarios: { [id]: defaultScenario(id) },
     ui: { language: 'ru', theme: 'dark', openSections: {} },
@@ -116,9 +116,9 @@ function migrateV1ToV2(raw: V1State): V2State {
   };
 }
 
-function migrateV2ToV3(raw: V2State): AppState {
+function migrateV2ToV3(raw: V2State): V3State {
   const today = new Date();
-  const scenarios: AppState['scenarios'] = {};
+  const scenarios: V3State['scenarios'] = {};
   for (const sid of Object.keys(raw.scenarios)) {
     const old = raw.scenarios[sid];
     const oi = old.inputs;
@@ -140,11 +140,50 @@ function migrateV2ToV3(raw: V2State): AppState {
       inputs: {
         ...oi,
         savingsPicks,
-      },
+      } as unknown as Record<string, unknown>,
     };
   }
   return {
     schemaVersion: 3,
+    activeScenarioId: raw.activeScenarioId,
+    scenarios,
+    ui: raw.ui,
+  };
+}
+
+type V3State = {
+  schemaVersion: 3;
+  activeScenarioId: string;
+  scenarios: Record<string, { id: string; name: string; createdAt: string; updatedAt: string; inputs: Record<string, unknown> }>;
+  ui: { language: string; theme: string; openSections: Record<string, boolean> };
+};
+
+function migrateV3ToV4(raw: V3State): AppState {
+  const scenarios: AppState['scenarios'] = {};
+  for (const sid of Object.keys(raw.scenarios)) {
+    const old = raw.scenarios[sid];
+    const oi = old.inputs;
+    const includeExpectedYield = typeof oi.includeExpectedYield === 'boolean' ? oi.includeExpectedYield : true;
+    scenarios[sid] = {
+      id: old.id,
+      name: old.name,
+      createdAt: old.createdAt,
+      updatedAt: old.updatedAt,
+      inputs: {
+        returnDate:       oi.returnDate as string,
+        voyageDate:       oi.voyageDate as string,
+        salaryLumpSumUsd: oi.salaryLumpSumUsd as number,
+        assets:           oi.assets as { usdBank: number; usdCash: number; rubBank: number },
+        rubPerUsd:        oi.rubPerUsd as number,
+        monthlyFamilyRub: oi.monthlyFamilyRub as number,
+        goals:            oi.goals as any[],
+        includeExpectedYield,
+        savingsInstruments: [],
+      } as unknown as Scenario['inputs'],
+    };
+  }
+  return {
+    schemaVersion: 4,
     activeScenarioId: raw.activeScenarioId,
     scenarios,
     ui: raw.ui as AppState['ui'],
@@ -159,15 +198,23 @@ function migrate(raw: unknown): AppState {
       throw new Error('Invalid state shape');
     }
     const v2 = migrateV1ToV2(s as unknown as V1State);
-    return migrateV2ToV3(v2);
+    const v3 = migrateV2ToV3(v2);
+    return migrateV3ToV4(v3 as unknown as V3State);
   }
   if (s.schemaVersion === 2) {
     if (typeof s.activeScenarioId !== 'string' || typeof s.scenarios !== 'object' || s.scenarios === null) {
       throw new Error('Invalid state shape');
     }
-    return migrateV2ToV3(s as unknown as V2State);
+    const v3 = migrateV2ToV3(s as unknown as V2State);
+    return migrateV3ToV4(v3 as unknown as V3State);
   }
-  if (s.schemaVersion !== 3) throw new Error(`Unsupported schemaVersion: ${String(s.schemaVersion)}`);
+  if (s.schemaVersion === 3) {
+    if (typeof s.activeScenarioId !== 'string' || typeof s.scenarios !== 'object' || s.scenarios === null) {
+      throw new Error('Invalid state shape');
+    }
+    return migrateV3ToV4(s as unknown as V3State);
+  }
+  if (s.schemaVersion !== 4) throw new Error(`Unsupported schemaVersion: ${String(s.schemaVersion)}`);
   if (typeof s.activeScenarioId !== 'string' || typeof s.scenarios !== 'object' || s.scenarios === null) {
     throw new Error('Invalid state shape');
   }

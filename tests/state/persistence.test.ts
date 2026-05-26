@@ -8,7 +8,7 @@ describe('persistence — localStorage', () => {
 
   it('loadState returns defaultState when storage empty', () => {
     const s = loadState();
-    expect(s.schemaVersion).toBe(3);
+    expect(s.schemaVersion).toBe(4);
     expect(Object.keys(s.scenarios)).toHaveLength(1);
   });
 
@@ -23,7 +23,7 @@ describe('persistence — localStorage', () => {
   it('falls back to defaultState on corrupted JSON', () => {
     localStorage.setItem(STORAGE_KEY, 'not-json{{{');
     const s = loadState();
-    expect(s.schemaVersion).toBe(3);
+    expect(s.schemaVersion).toBe(4);
   });
 });
 
@@ -36,7 +36,7 @@ describe('persistence — JSON export/import', () => {
     const json = exportJson(s);
     const parsed = importJson(json);
     expect(parsed.ui.theme).toBe('light');
-    expect(parsed.schemaVersion).toBe(3);
+    expect(parsed.schemaVersion).toBe(4);
   });
 
   it('importJson rejects invalid JSON', () => {
@@ -78,18 +78,17 @@ describe('migrate v1 → v3 (chained)', () => {
       },
       ui: { language: 'ru', theme: 'dark', openSections: {} },
     };
-    const v3 = importJson(JSON.stringify(v1));
-    expect(v3.schemaVersion).toBe(3);
-    const inp = v3.scenarios.s1.inputs as any;
+    const v4 = importJson(JSON.stringify(v1));
+    expect(v4.schemaVersion).toBe(4);
+    const inp = v4.scenarios.s1.inputs as any;
     expect(inp.investments).toBeUndefined();
-    expect(inp.freeCashRub).toBe(800_000);
-    expect(inp.savingsPicks).toBeDefined();
-    expect(inp.savingsPicks.A.preset).toBe('cons');
-    expect(inp.savingsPicks.B.preset).toBe('cons');
-    expect(inp.savingsPicks.C.preset).toBe('bal');
+    expect('freeCashRub' in inp).toBe(false);
+    expect('savingsPicks' in inp).toBe(false);
+    expect(Array.isArray(inp.savingsInstruments)).toBe(true);
+    expect(inp.savingsInstruments).toHaveLength(0);
   });
 
-  it('accepts a v3 blob unchanged', () => {
+  it('migrates a v3 blob to v4, stripping dead fields', () => {
     const v3 = {
       schemaVersion: 3,
       activeScenarioId: 's1',
@@ -115,9 +114,16 @@ describe('migrate v1 → v3 (chained)', () => {
       ui: { language: 'en', theme: 'light', openSections: {} },
     };
     const out = importJson(JSON.stringify(v3));
-    expect(out.schemaVersion).toBe(3);
-    expect((out.scenarios.s1.inputs as any).freeCashRub).toBe(123);
-    expect((out.scenarios.s1.inputs as any).savingsPicks.A.preset).toBe('custom');
+    expect(out.schemaVersion).toBe(4);
+    const i = out.scenarios.s1.inputs as unknown as Record<string, unknown>;
+    expect('freeCashRub'      in i).toBe(false);
+    expect('horizonDate'      in i).toBe(false);
+    expect('cbrKeyRatePct'    in i).toBe(false);
+    expect('cbrRateUpdatedAt' in i).toBe(false);
+    expect('layerOverride'    in i).toBe(false);
+    expect('savingsPicks'     in i).toBe(false);
+    expect(i.includeExpectedYield).toBe(true);
+    expect(Array.isArray(i.savingsInstruments)).toBe(true);
   });
 
   it('migrates a v2 blob to v3, seeding savingsPicks via auto-fill', () => {
@@ -140,16 +146,95 @@ describe('migrate v1 → v3 (chained)', () => {
       },
       ui: { language: 'ru', theme: 'dark', openSections: {} },
     };
-    const v3 = importJson(JSON.stringify(v2));
-    expect(v3.schemaVersion).toBe(3);
-    const inp = v3.scenarios.s1.inputs as any;
-    expect(inp.savingsPicks).toBeDefined();
-    expect(inp.savingsPicks.A.preset).toBe('cons');
-    expect(Object.keys(inp.savingsPicks.A.classes).length).toBeGreaterThan(0);
+    const v4 = importJson(JSON.stringify(v2));
+    expect(v4.schemaVersion).toBe(4);
+    const inp = v4.scenarios.s1.inputs as any;
+    expect('savingsPicks' in inp).toBe(false);
+    expect('freeCashRub'  in inp).toBe(false);
+    expect(Array.isArray(inp.savingsInstruments)).toBe(true);
+    expect(inp.savingsInstruments).toHaveLength(0);
   });
 
   it('rejects unknown schemaVersion', () => {
     const bad = JSON.stringify({ schemaVersion: 9, activeScenarioId: 's', scenarios: {}, ui: {} });
     expect(() => importJson(bad)).toThrow();
+  });
+});
+
+describe('migrate v3 → v4', () => {
+  it('strips dead fields and seeds savingsInstruments', () => {
+    const v3 = JSON.stringify({
+      schemaVersion: 3,
+      activeScenarioId: 'a',
+      scenarios: {
+        a: {
+          id: 'a', name: 'X', createdAt: '2026-05-01', updatedAt: '2026-05-01',
+          inputs: {
+            returnDate: '2026-05-01', voyageDate: '2026-08-01', salaryLumpSumUsd: 0,
+            assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 }, rubPerUsd: 90,
+            monthlyFamilyRub: 0, goals: [],
+            freeCashRub: 500_000, horizonDate: '2026-08-01', cbrKeyRatePct: 16,
+            cbrRateUpdatedAt: '2026-05-01', layerOverride: {}, includeExpectedYield: true,
+            savingsPicks: { A: { preset: 'cons', classes: {} }, B: { preset: 'cons', classes: {} }, C: { preset: 'bal', classes: {} } },
+          },
+        },
+      },
+      ui: { language: 'ru', theme: 'dark', openSections: {} },
+    });
+    const out = importJson(v3);
+    expect(out.schemaVersion).toBe(4);
+    const i = out.scenarios['a'].inputs as unknown as Record<string, unknown>;
+    expect('freeCashRub'      in i).toBe(false);
+    expect('horizonDate'      in i).toBe(false);
+    expect('cbrKeyRatePct'    in i).toBe(false);
+    expect('cbrRateUpdatedAt' in i).toBe(false);
+    expect('layerOverride'    in i).toBe(false);
+    expect('savingsPicks'     in i).toBe(false);
+    expect(Array.isArray((i as any).savingsInstruments)).toBe(true);
+    expect((i as any).savingsInstruments).toHaveLength(0);
+  });
+
+  it('defaults includeExpectedYield to true if absent', () => {
+    const v3 = JSON.stringify({
+      schemaVersion: 3,
+      activeScenarioId: 'a',
+      scenarios: {
+        a: {
+          id: 'a', name: 'X', createdAt: '2026-05-01', updatedAt: '2026-05-01',
+          inputs: {
+            returnDate: '2026-05-01', voyageDate: '2026-08-01', salaryLumpSumUsd: 0,
+            assets: { usdBank: 0, usdCash: 0, rubBank: 0 }, rubPerUsd: 90,
+            monthlyFamilyRub: 0, goals: [],
+            freeCashRub: 0, horizonDate: '2026-08-01', cbrKeyRatePct: 16,
+            cbrRateUpdatedAt: '2026-05-01', layerOverride: {},
+            savingsPicks: { A: { preset: 'cons', classes: {} }, B: { preset: 'cons', classes: {} }, C: { preset: 'bal', classes: {} } },
+          },
+        },
+      },
+      ui: { language: 'ru', theme: 'dark', openSections: {} },
+    });
+    const out = importJson(v3);
+    expect(out.scenarios['a'].inputs.includeExpectedYield).toBe(true);
+  });
+
+  it('v1 → v4 chain produces a valid v4 state', () => {
+    const v1 = JSON.stringify({
+      schemaVersion: 1,
+      activeScenarioId: 'a',
+      scenarios: {
+        a: {
+          id: 'a', name: 'X', createdAt: '2026-05-01', updatedAt: '2026-05-01',
+          inputs: {
+            returnDate: '2026-05-01', voyageDate: '2026-08-01', salaryLumpSumUsd: 0,
+            assets: { usdBank: 0, usdCash: 0, rubBank: 0 }, rubPerUsd: 90,
+            monthlyFamilyRub: 0, goals: [], investments: [],
+          },
+        },
+      },
+      ui: { language: 'ru', theme: 'dark', openSections: {} },
+    });
+    const out = importJson(v1);
+    expect(out.schemaVersion).toBe(4);
+    expect(Array.isArray(out.scenarios['a'].inputs.savingsInstruments)).toBe(true);
   });
 });

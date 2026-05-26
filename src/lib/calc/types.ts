@@ -157,7 +157,7 @@ export type Language = 'ru' | 'en';
 export type Theme = 'dark' | 'light';
 
 export type AppState = {
-  schemaVersion: 3;
+  schemaVersion: 4;
   activeScenarioId: ID;
   scenarios: Record<ID, Scenario>;
   ui: {
