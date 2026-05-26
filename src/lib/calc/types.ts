@@ -142,9 +142,7 @@ export type AllocationResult = {
 
 export type CombinedResult = {
   sim: SimulationResult;
-  alloc: AllocationResult;
   balanceAtVoyage: number;
-  expectedYieldMid: number;
 };
 
 export type Scenario = {
