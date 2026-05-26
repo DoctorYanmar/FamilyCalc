@@ -41,9 +41,7 @@
   <header class="topbar">
     <div class="brand">
       <span class="brand-mark">$</span>
-      <span>FamilyCalc</span>
-      <span class="brand-sep">/</span>
-      <span class="brand-sub">{$_('app.title')}</span>
+      <span>{$_('app.title')}</span>
     </div>
     <div class="topbar-tools">
       <span class="clock">{clock}</span>
@@ -73,7 +71,7 @@
   </div>
 
   <div class="app-footer">
-    <span>FAMILYCALC · LOCAL-FIRST</span>
+    <span>VACATION PLANNER</span>
     <span>{clock}</span>
   </div>
 
