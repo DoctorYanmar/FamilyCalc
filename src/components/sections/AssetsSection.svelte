@@ -13,7 +13,7 @@
   function setSalaryLump(v: number) { inputs.salaryLumpSumUsd = v; persistSoon(); }
 </script>
 
-<CollapsibleCard title={$_('assets.title')}>
+<CollapsibleCard title={$_('assets.title')} dataTour="assets">
   <CurrencyInput label={$_('assets.rubBank', { values: { symbol: currencySymbol(inputs.localCurrency) } })} value={inputs.assets.rubBank} onChange={setRubBank} suffix={currencySymbol(inputs.localCurrency)} />
   <CurrencyInput label={$_('assets.usdBank')} value={inputs.assets.usdBank} onChange={setUsdBank} suffix="$" />
   <CurrencyInput label={$_('assets.usdCash')} value={inputs.assets.usdCash} onChange={setUsdCash} suffix="$" />

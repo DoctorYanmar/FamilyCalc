@@ -84,7 +84,7 @@
   });
 </script>
 
-<section class="card chart-card">
+<section class="card chart-card" data-tour="chart">
   <div class="card-head">
     <div class="card-title">{$_('chart.title')}</div>
     <div class="chart-legend">

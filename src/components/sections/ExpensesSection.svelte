@@ -11,7 +11,7 @@
   function setMonthly(v: number) { inputs.monthlyFamilyRub = v; persistSoon(); }
 </script>
 
-<CollapsibleCard title={$_('expenses.title')}>
+<CollapsibleCard title={$_('expenses.title')} dataTour="expenses">
   <CurrencyInput label={$_('expenses.monthly', { values: { symbol: currencySymbol(inputs.localCurrency) } })} value={inputs.monthlyFamilyRub} onChange={setMonthly} suffix={currencySymbol(inputs.localCurrency) + '/mo'} />
   <div class="field">
     <span class="field-key">

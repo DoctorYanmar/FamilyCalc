@@ -3,12 +3,13 @@
     title: string;
     subtitle?: string;
     meta?: string;
+    dataTour?: string;
     children?: import('svelte').Snippet;
   };
-  let { title, subtitle, meta, children }: Props = $props();
+  let { title, subtitle, meta, dataTour, children }: Props = $props();
 </script>
 
-<section class="card">
+<section class="card" data-tour={dataTour}>
   <div class="card-head">
     <div class="card-title">{title}{#if subtitle} · <span style="color:var(--fg-3);font-weight:400">{subtitle}</span>{/if}</div>
     {#if meta}<div class="card-meta">{meta}</div>{/if}

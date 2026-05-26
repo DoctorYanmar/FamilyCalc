@@ -13,7 +13,7 @@
 </script>
 
 <!-- Status sub-bar -->
-<div class="subbar">
+<div class="subbar" data-tour="kpis">
   <div class="subbar-group">
     {#if onTrack}
       <span class="status-pill"><span class="dot"></span>{$_('status.onTrack')}</span>
