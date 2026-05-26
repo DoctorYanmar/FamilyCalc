@@ -44,9 +44,16 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
   const totalDays = Math.max(0, Math.floor((voyage.getTime() - start.getTime()) / MS_PER_DAY) + 1);
 
   if (totalDays === 0) {
+    const earlyAssets: AssetMix = { ...inputs.assets };
+    for (const si of inputs.savingsInstruments) {
+      if (!si.enabled) continue;
+      const m = maturityDate(si);
+      if (m !== null && toISO(m) <= toISO(start)) continue;
+      drain(earlyAssets, si.amountRub, inputs.rubPerUsd);
+    }
     return {
       days: [],
-      balanceAtVoyage: totalRub(inputs.assets, inputs.rubPerUsd),
+      balanceAtVoyage: totalRub(earlyAssets, inputs.rubPerUsd),
       runsOutOn: null,
       daysOfRunway: 0,
       totalSpentRub: 0,
@@ -56,6 +63,17 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
   }
 
   const assets: AssetMix = { ...inputs.assets };
+
+  // Drain instrument principal from wallet — money committed to savings
+  // is not available for daily expenses. (Not added to totalSpent —
+  // it's set aside, not spent.)
+  for (const si of inputs.savingsInstruments) {
+    if (!si.enabled) continue;
+    const m = maturityDate(si);
+    if (m !== null && toISO(m) <= toISO(start)) continue;
+    drain(assets, si.amountRub, inputs.rubPerUsd);
+  }
+
   let totalSpent = 0;
   const dailyExpense = inputs.monthlyFamilyRub / DAYS_PER_MONTH;
   const days: DayPoint[] = [];

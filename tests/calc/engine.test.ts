@@ -202,41 +202,41 @@ function inst(overrides: Partial<SavingsInstrument>): SavingsInstrument {
 }
 
 describe('simulate — savings at-voyage bonus', () => {
-  it('assets.rubBank is unaffected at sim start by adding an enabled instrument', () => {
+  it('drains instrument principal from wallet at sim start', () => {
     const noSav = simulate({ ...emptyInputs() }, new Date('2026-05-01T00:00:00Z'));
     const withSav = simulate(
-      { ...emptyInputs(), savingsInstruments: [inst({ amountRub: 500_000 })] },
+      { ...emptyInputs(), savingsInstruments: [inst({ amountRub: 50_000 })] },
       new Date('2026-05-01T00:00:00Z'),
     );
-    expect(withSav.days[0].totalRub).toBe(noSav.days[0].totalRub);
+    expect(withSav.days[0].totalRub).toBe(noSav.days[0].totalRub - 50_000);
   });
 
-  it('term outlasts voyage + includeExpectedYield: true → balanceAtVoyage = wallet + principal + accrued', () => {
+  it('term outlasts voyage + includeExpectedYield: true → balanceAtVoyage = wallet + accrued interest only', () => {
     const today = new Date('2026-05-01T00:00:00Z');
     const inputs: Inputs = {
       ...emptyInputs(),
       voyageDate: '2026-08-01',
-      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      assets: { usdBank: 0, usdCash: 0, rubBank: 600_000 },
       includeExpectedYield: true,
       savingsInstruments: [inst({ amountRub: 500_000, startDate: '2026-05-01', termMonths: 12 })],
     };
     const r = simulate(inputs, today);
     const voyage = new Date('2026-08-01T00:00:00Z');
-    const expected = 100_000 + savingsAccrued(inputs.savingsInstruments[0], voyage);
-    expect(r.balanceAtVoyage).toBeCloseTo(expected, 2);
+    const interest = savingsAccrued(inputs.savingsInstruments[0], voyage) - 500_000;
+    expect(r.balanceAtVoyage).toBeCloseTo(600_000 + interest, 2);
   });
 
-  it('term outlasts voyage + includeExpectedYield: false → balanceAtVoyage = wallet + principal (no interest)', () => {
+  it('term outlasts voyage + includeExpectedYield: false → balanceAtVoyage = wallet (no interest)', () => {
     const today = new Date('2026-05-01T00:00:00Z');
     const inputs: Inputs = {
       ...emptyInputs(),
       voyageDate: '2026-08-01',
-      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      assets: { usdBank: 0, usdCash: 0, rubBank: 600_000 },
       includeExpectedYield: false,
       savingsInstruments: [inst({ amountRub: 500_000, startDate: '2026-05-01', termMonths: 12 })],
     };
     const r = simulate(inputs, today);
-    expect(r.balanceAtVoyage).toBeCloseTo(100_000 + 500_000, 2);
+    expect(r.balanceAtVoyage).toBeCloseTo(600_000, 2);
   });
 
   it('open-ended at voyage → balanceAtVoyage includes full accrued regardless of toggle', () => {
@@ -306,19 +306,20 @@ describe('simulate — savings in-window maturity', () => {
     expect(at - before).toBeCloseTo(payout, 2);
   });
 
-  it('matured payout is fully (principal + accrued)', () => {
+  it('matured payout returns interest to wallet (principal was drained at start)', () => {
     const today = new Date('2026-05-01T00:00:00Z');
     const i = inst({ amountRub: 500_000, startDate: '2026-05-01', termMonths: 3, compounding: 'monthly' });
     const inputs: Inputs = {
       ...emptyInputs(),
       voyageDate: '2026-12-01',
-      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      assets: { usdBank: 0, usdCash: 0, rubBank: 600_000 },
       includeExpectedYield: true,
       savingsInstruments: [i],
     };
     const r = simulate(inputs, today);
     const matValue = savingsAccrued(i, maturityDate(i)!);
-    expect(r.balanceAtVoyage).toBeCloseTo(100_000 + matValue, 2);
+    const interest = matValue - 500_000;
+    expect(r.balanceAtVoyage).toBeCloseTo(600_000 + interest, 2);
   });
 
   it('matured payout is available for daily expenses', () => {
@@ -361,16 +362,14 @@ describe('simulate — savings in-window maturity', () => {
     const inputs: Inputs = {
       ...emptyInputs(),
       voyageDate: '2026-12-01',
-      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      assets: { usdBank: 0, usdCash: 0, rubBank: 600_000 },
       includeExpectedYield: true,
       savingsInstruments: [a, b],
     };
     const r = simulate(inputs, today);
     const voyage = new Date('2026-12-01T00:00:00Z');
-    const expected =
-      100_000
-      + savingsAccrued(a, maturityDate(a)!)
-      + savingsAccrued(b, voyage);
-    expect(r.balanceAtVoyage).toBeCloseTo(expected, 2);
+    const interestA = savingsAccrued(a, maturityDate(a)!) - 300_000;
+    const interestB = savingsAccrued(b, voyage) - 200_000;
+    expect(r.balanceAtVoyage).toBeCloseTo(600_000 + interestA + interestB, 2);
   });
 });

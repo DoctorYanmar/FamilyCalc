@@ -99,11 +99,11 @@
 </section>
 
 <style>
-  .zero { display: grid; gap: var(--gap-3); }
+  .zero { display: grid; gap: var(--gap-3); padding: 0 var(--gap-4); }
   .zero-body { color: var(--fg-2); line-height: 1.5; margin: 0; }
   .inst-list { display: grid; gap: var(--gap-3); margin-bottom: var(--gap-3); }
   .picker-wrap { margin: var(--gap-3) 0; }
-  .sav-foot { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--gap-3); margin-top: var(--gap-4); padding-top: var(--gap-3); border-top: 1px solid var(--border-soft); }
+  .sav-foot { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--gap-3); margin: var(--gap-4) var(--gap-4) 0; padding-top: var(--gap-3); border-top: 1px solid var(--border-soft); }
   .totals { font-family: var(--mono); color: var(--fg-2); display: inline-flex; gap: var(--gap-2); align-items: center; }
   .totals .accent { color: var(--accent); font-weight: 600; }
   .totals .dot { color: var(--fg-3); }
