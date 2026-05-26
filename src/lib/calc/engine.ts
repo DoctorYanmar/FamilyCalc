@@ -68,10 +68,34 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
   const dailyExpense = inputs.monthlyFamilyRub / DAYS_PER_MONTH;
   const days: DayPoint[] = [];
 
+  // Build pendingMaturities map for instruments maturing in the sim window.
+  const simStartISO = toISO(start);
+  const pendingMaturities: Map<string, typeof inputs.savingsInstruments> = new Map();
+  for (const si of inputs.savingsInstruments) {
+    if (!si.enabled) continue;
+    const m = maturityDate(si);
+    if (m === null) continue;
+    const mISO = toISO(m);
+    if (mISO <= simStartISO) continue;
+    if (m.getTime() > voyage.getTime()) continue;
+    const arr = pendingMaturities.get(mISO) ?? [];
+    arr.push(si);
+    pendingMaturities.set(mISO, arr);
+  }
+
   for (let i = 0; i < totalDays; i++) {
     const d = new Date(start.getTime() + i * MS_PER_DAY);
     const todayISO = toISO(d);
     const todaysEvents: GoalEvent[] = [];
+
+    // Maturity payouts on day d (before expenses/goals).
+    const matToday = pendingMaturities.get(todayISO);
+    if (matToday) {
+      for (const si of matToday) {
+        const payout = accruedValue(si, maturityDate(si)!);
+        assets.rubBank += payout;
+      }
+    }
 
     if (dailyExpense > 0) {
       drain(assets, dailyExpense, inputs.rubPerUsd);
@@ -128,20 +152,19 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
   for (const si of inputs.savingsInstruments) {
     if (!si.enabled) continue;
     const m = maturityDate(si);
+    if (m !== null && toISO(m) <= simStartISO) continue;  // already matured before sim — skip
     const stillLockedAtVoyage = m === null || m.getTime() > voyage.getTime();
-    if (!stillLockedAtVoyage) {
-      // Will mature in-window — Task 5 handles the payout into rubBank.
-      // For now, count toward totals only.
+    if (stillLockedAtVoyage) {
+      const valueAtVoyage = accruedValue(si, voyage);
+      const isOpenEnded = m === null;
+      const bonusInterest = (inputs.includeExpectedYield || isOpenEnded) ? valueAtVoyage - si.amountRub : 0;
+      accruedBonus += si.amountRub + bonusInterest;
+      totalPrincipalRub += si.amountRub;
+      totalAccruedInterestRub += bonusInterest;
+    } else {
       totalPrincipalRub += si.amountRub;
       totalAccruedInterestRub += accruedValue(si, m!) - si.amountRub;
-      continue;
     }
-    const valueAtVoyage = accruedValue(si, voyage);
-    const isOpenEnded = m === null;
-    const bonusInterest = (inputs.includeExpectedYield || isOpenEnded) ? valueAtVoyage - si.amountRub : 0;
-    accruedBonus += si.amountRub + bonusInterest;
-    totalPrincipalRub += si.amountRub;
-    totalAccruedInterestRub += bonusInterest;
   }
 
   return {

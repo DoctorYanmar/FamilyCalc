@@ -347,3 +347,93 @@ describe('simulate — savings at-voyage bonus', () => {
     expect(r.totalAccruedInterestRub).toBeGreaterThan(0);
   });
 });
+
+describe('simulate — savings in-window maturity', () => {
+  it('matures before voyage → payout lands in rubBank on maturity day', () => {
+    const today = new Date('2026-05-01T00:00:00Z');
+    const i = inst({ amountRub: 500_000, startDate: '2026-05-01', termMonths: 3, compounding: 'monthly' });
+    const inputs: Inputs = {
+      ...emptyInputs(),
+      voyageDate: '2026-12-01',
+      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      includeExpectedYield: true,
+      savingsInstruments: [i],
+    };
+    const r = simulate(inputs, today);
+    const matISO = maturityDate(i)!.toISOString().slice(0, 10);
+    const idxMat = r.days.findIndex(d => d.date === matISO);
+    expect(idxMat).toBeGreaterThanOrEqual(0);
+    const before = r.days[idxMat - 1].totalRub;
+    const at = r.days[idxMat].totalRub;
+    const payout = savingsAccrued(i, maturityDate(i)!);
+    expect(at - before).toBeCloseTo(payout, 2);
+  });
+
+  it('matured payout is fully (principal + accrued)', () => {
+    const today = new Date('2026-05-01T00:00:00Z');
+    const i = inst({ amountRub: 500_000, startDate: '2026-05-01', termMonths: 3, compounding: 'monthly' });
+    const inputs: Inputs = {
+      ...emptyInputs(),
+      voyageDate: '2026-12-01',
+      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      includeExpectedYield: true,
+      savingsInstruments: [i],
+    };
+    const r = simulate(inputs, today);
+    const matValue = savingsAccrued(i, maturityDate(i)!);
+    expect(r.balanceAtVoyage).toBeCloseTo(100_000 + matValue, 2);
+  });
+
+  it('matured payout is available for daily expenses', () => {
+    const today = new Date('2026-05-01T00:00:00Z');
+    const i = inst({ amountRub: 500_000, startDate: '2026-05-01', termMonths: 1, compounding: 'monthly' });
+    const inputs: Inputs = {
+      ...emptyInputs(),
+      voyageDate: '2027-05-01',
+      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      monthlyFamilyRub: 60_000,
+      includeExpectedYield: true,
+      savingsInstruments: [i],
+    };
+    const r = simulate(inputs, today);
+    const matISO = maturityDate(i)!.toISOString().slice(0, 10);
+    const idxMat = r.days.findIndex(d => d.date === matISO);
+    expect(r.days[idxMat].totalRub).toBeGreaterThan(r.days[idxMat - 1].totalRub);
+  });
+
+  it('already-matured-at-sim-start instrument is skipped entirely', () => {
+    const today = new Date('2026-05-01T00:00:00Z');
+    const i = inst({ amountRub: 500_000, startDate: '2025-11-01', termMonths: 3 });
+    const inputs: Inputs = {
+      ...emptyInputs(),
+      voyageDate: '2026-08-01',
+      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      includeExpectedYield: true,
+      savingsInstruments: [i],
+    };
+    const r = simulate(inputs, today);
+    expect(r.balanceAtVoyage).toBeCloseTo(100_000, 2);
+    expect(r.totalPrincipalRub).toBe(0);
+    expect(r.totalAccruedInterestRub).toBe(0);
+  });
+
+  it('multiple instruments with mixed maturity timing do not interact', () => {
+    const today = new Date('2026-05-01T00:00:00Z');
+    const a = inst({ id: 'a', amountRub: 300_000, startDate: '2026-05-01', termMonths: 2 });
+    const b = inst({ id: 'b', amountRub: 200_000, startDate: '2026-05-01', termMonths: 24 });
+    const inputs: Inputs = {
+      ...emptyInputs(),
+      voyageDate: '2026-12-01',
+      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      includeExpectedYield: true,
+      savingsInstruments: [a, b],
+    };
+    const r = simulate(inputs, today);
+    const voyage = new Date('2026-12-01T00:00:00Z');
+    const expected =
+      100_000
+      + savingsAccrued(a, maturityDate(a)!)
+      + savingsAccrued(b, voyage);
+    expect(r.balanceAtVoyage).toBeCloseTo(expected, 2);
+  });
+});
