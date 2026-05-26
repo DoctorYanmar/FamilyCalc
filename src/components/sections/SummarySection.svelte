@@ -3,6 +3,7 @@
   import { app, activeInputs } from '../../lib/state/scenarios.svelte';
   import { currentResult } from '../../lib/state/derived';
   import { formatLocal } from '../../lib/format';
+  import { currencySymbol } from '../../lib/calc/currencies';
 
   const inputs = $derived(activeInputs());
   const result = $derived(currentResult());
@@ -28,7 +29,7 @@
       <span class="number">{$_('results.daysUnit', { values: { n: daysToVoyage } })}</span>
     </div>
     <div class="field">
-      <span class="field-key">{$_('summary.totalAssetsRub')}</span>
+      <span class="field-key">{$_('summary.totalAssetsRub', { values: { symbol: currencySymbol(inputs.localCurrency) } })}</span>
       <span class="number">{formatLocal(totalRubEquiv, app.ui.language, inputs.localCurrency)}</span>
     </div>
     <div class="field">

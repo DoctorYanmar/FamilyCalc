@@ -2,6 +2,7 @@
   import { _ } from 'svelte-i18n';
   import { get } from 'svelte/store';
   import { activeInputs, persistSoon } from '../../lib/state/scenarios.svelte';
+  import { currencySymbol } from '../../lib/calc/currencies';
   import CollapsibleCard from '../controls/CollapsibleCard.svelte';
   import type { Goal, GoalMode } from '../../lib/calc/types';
 
@@ -43,7 +44,7 @@
   <div class="goals-list">
     <div class="goals-row header">
       <span>{$_('goals.name')}</span>
-      <span>{$_('goals.amount')}</span>
+      <span>{$_('goals.amount', { values: { symbol: currencySymbol(inputs.localCurrency) } })}</span>
       <span>{$_('goals.mode')}</span>
       <span>{$_('goals.date')}</span>
       <span>{$_('goals.endDate')}</span>

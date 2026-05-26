@@ -39,7 +39,7 @@
   "summary.title": "Сводка",
   "summary.meta": "только чтение",
   "summary.daysToVoyage": "Дней до рейса",
-  "summary.totalAssetsRub": "Активы в ₽-экв.",
+  "summary.totalAssetsRub": "Активы в {symbol}-экв.",
   "summary.outflowWindow": "Отток в окне",
   "summary.netAtVoyage": "Чисто на дату",
   "goals.title": "Цели",

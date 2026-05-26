@@ -3,6 +3,7 @@
   import { app, activeScenario, activeInputs } from '../lib/state/scenarios.svelte';
   import { currentResult } from '../lib/state/derived';
   import { formatLocal, formatUsd, formatDate } from '../lib/format';
+  import { currencySymbol } from '../lib/calc/currencies';
 
   const lang = $derived(app.ui.language);
   const inputs = $derived(activeInputs());
@@ -34,20 +35,20 @@
     <p>{$_('context.returnDate')}: {formatDate(inputs.returnDate, lang)}</p>
     <p>{$_('context.voyageDate')}: {formatDate(inputs.voyageDate, lang)}</p>
     <p>{$_('context.lumpSum')}: {formatUsd(inputs.salaryLumpSumUsd, lang)}</p>
-    <p>{$_('context.rate')}: {inputs.rubPerUsd}</p>
+    <p>{$_('context.rate', { values: { code: inputs.localCurrency, symbol: currencySymbol(inputs.localCurrency) } })}: {inputs.rubPerUsd}</p>
   </section>
 
   <section>
     <h2>{$_('assets.title')}</h2>
     <p>{$_('assets.usdBank')}: {formatUsd(inputs.assets.usdBank, lang)} ({formatLocal(inputs.assets.usdBank * inputs.rubPerUsd, lang, inputs.localCurrency)})</p>
     <p>{$_('assets.usdCash')}: {formatUsd(inputs.assets.usdCash, lang)} ({formatLocal(inputs.assets.usdCash * inputs.rubPerUsd, lang, inputs.localCurrency)})</p>
-    <p>{$_('assets.rubBank')}: {formatLocal(inputs.assets.rubBank, lang, inputs.localCurrency)}</p>
-    <p><b>{$_('assets.totalRub')}: {formatLocal(totalAssetsRub, lang, inputs.localCurrency)}</b></p>
+    <p>{$_('assets.rubBank', { values: { symbol: currencySymbol(inputs.localCurrency) } })}: {formatLocal(inputs.assets.rubBank, lang, inputs.localCurrency)}</p>
+    <p><b>{$_('assets.totalRub', { values: { symbol: currencySymbol(inputs.localCurrency) } })}: {formatLocal(totalAssetsRub, lang, inputs.localCurrency)}</b></p>
   </section>
 
   <section>
     <h2>{$_('expenses.title')}</h2>
-    <p>{$_('expenses.monthly')}: {formatLocal(inputs.monthlyFamilyRub, lang, inputs.localCurrency)}</p>
+    <p>{$_('expenses.monthly', { values: { symbol: currencySymbol(inputs.localCurrency) } })}: {formatLocal(inputs.monthlyFamilyRub, lang, inputs.localCurrency)}</p>
   </section>
 
   {#if inputs.goals.length > 0}
