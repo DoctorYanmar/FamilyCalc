@@ -1,4 +1,4 @@
-import type { AppState, Scenario } from '../calc/types';
+import type { AppState, Language, Scenario } from '../calc/types';
 
 export const STORAGE_KEY = 'familycalc.state.v1';
 
@@ -28,6 +28,12 @@ function defaultScenario(id: string): Scenario {
   };
 }
 
+function detectLanguage(): Language {
+  if (typeof navigator === 'undefined') return 'ru';
+  const lang = (navigator.language || '').toLowerCase();
+  return lang.startsWith('ru') ? 'ru' : 'en';
+}
+
 export function defaultState(): AppState {
   const id = (typeof crypto !== 'undefined' && crypto.randomUUID)
     ? crypto.randomUUID()
@@ -36,7 +42,7 @@ export function defaultState(): AppState {
     schemaVersion: 6,
     activeScenarioId: id,
     scenarios: { [id]: defaultScenario(id) },
-    ui: { language: 'ru', theme: 'dark', openSections: {}, onboardingDone: false },
+    ui: { language: detectLanguage(), theme: 'dark', openSections: {}, onboardingDone: false },
   };
 }
 
