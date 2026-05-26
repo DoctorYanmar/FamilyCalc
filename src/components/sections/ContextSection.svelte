@@ -60,6 +60,13 @@
     width: 180px;
     text-align: center;
   }
+  @media (max-width: 480px) {
+    .field > :global(.select) {
+      width: 100%;
+      text-align: left;
+      font-size: var(--t-lg);
+    }
+  }
   .stepper > .stepper-val {
     all: unset;
     border-left: 1px solid var(--border);
