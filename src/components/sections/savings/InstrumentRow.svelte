@@ -1,6 +1,7 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
   import { app, activeInputs, persistSoon } from '../../../lib/state/scenarios.svelte';
+  import { currencySymbol } from '../../../lib/calc/currencies';
   import { formatLocal, formatDate } from '../../../lib/format';
   import { templateById } from '../../../lib/calc/savingsTemplates';
   import { maturityDate, accruedValue } from '../../../lib/calc/savings';
@@ -73,7 +74,7 @@
                value={instrument.amountRub === 0 ? '' : instrument.amountRub}
                placeholder="0"
                oninput={(e) => setAmount((e.target as HTMLInputElement).value)} />
-        <span class="suffix">{app.ui.language === 'ru' ? '₽' : 'LC'}</span>
+        <span class="suffix">{currencySymbol(inputs.localCurrency)}</span>
       </span>
     </label>
     <label class="field">

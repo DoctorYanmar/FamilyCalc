@@ -1,6 +1,7 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
-  import { app, activeInputs, persistSoon } from '../../lib/state/scenarios.svelte';
+  import { activeInputs, persistSoon } from '../../lib/state/scenarios.svelte';
+  import { currencySymbol } from '../../lib/calc/currencies';
   import CollapsibleCard from '../controls/CollapsibleCard.svelte';
   import CurrencyInput from '../controls/CurrencyInput.svelte';
 
@@ -13,7 +14,7 @@
 </script>
 
 <CollapsibleCard title={$_('assets.title')}>
-  <CurrencyInput label={$_('assets.rubBank')} value={inputs.assets.rubBank} onChange={setRubBank} suffix={app.ui.language === 'ru' ? '₽' : 'LC'} />
+  <CurrencyInput label={$_('assets.rubBank')} value={inputs.assets.rubBank} onChange={setRubBank} suffix={currencySymbol(inputs.localCurrency)} />
   <CurrencyInput label={$_('assets.usdBank')} value={inputs.assets.usdBank} onChange={setUsdBank} suffix="$" />
   <CurrencyInput label={$_('assets.usdCash')} value={inputs.assets.usdCash} onChange={setUsdCash} suffix="$" />
   <CurrencyInput label={$_('assets.salaryLumpSum')} value={inputs.salaryLumpSumUsd} onChange={setSalaryLump} suffix="$" />

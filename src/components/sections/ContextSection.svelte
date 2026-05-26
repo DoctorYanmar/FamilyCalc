@@ -1,6 +1,7 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
-  import { activeInputs, persistSoon } from '../../lib/state/scenarios.svelte';
+  import { app, activeInputs, persistSoon } from '../../lib/state/scenarios.svelte';
+  import { CURRENCIES, currencySymbol } from '../../lib/calc/currencies';
   import CollapsibleCard from '../controls/CollapsibleCard.svelte';
   import DateInput from '../controls/DateInput.svelte';
 
@@ -24,13 +25,26 @@
 
   function setVoyage(v: string) { inputs.voyageDate = v; persistSoon(); }
   function setReturn(v: string) { inputs.returnDate = v; persistSoon(); }
+
+  function setCurrency(e: Event) {
+    inputs.localCurrency = (e.target as HTMLSelectElement).value;
+    persistSoon();
+  }
 </script>
 
 <CollapsibleCard title={$_('context.title')}>
   <DateInput label={$_('context.returnDate')} value={inputs.returnDate} onChange={setReturn} />
   <DateInput label={$_('context.voyageDate')} value={inputs.voyageDate} onChange={setVoyage} />
+  <label class="field">
+    <span class="field-key">{$_('context.currency')}</span>
+    <select class="select" value={inputs.localCurrency} onchange={setCurrency}>
+      {#each CURRENCIES as c (c.code)}
+        <option value={c.code}>{c.symbol} {app.ui.language === 'ru' ? c.nameRu : c.name}</option>
+      {/each}
+    </select>
+  </label>
   <div class="field">
-    <span class="field-key">{$_('context.rate')}</span>
+    <span class="field-key">{$_('context.rate', { values: { code: inputs.localCurrency, symbol: currencySymbol(inputs.localCurrency) } })}</span>
     <div class="stepper" role="group" aria-label={$_('context.rate')}>
       <button type="button" onclick={() => bumpRate(-0.5)} aria-label="-0.5">−</button>
       <input class="stepper-val" type="number" inputmode="decimal" step="0.01" min="1" max="500"
