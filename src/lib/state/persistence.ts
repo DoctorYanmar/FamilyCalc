@@ -33,10 +33,10 @@ export function defaultState(): AppState {
     ? crypto.randomUUID()
     : 'default-' + Math.random().toString(36).slice(2);
   return {
-    schemaVersion: 5,
+    schemaVersion: 6,
     activeScenarioId: id,
     scenarios: { [id]: defaultScenario(id) },
-    ui: { language: 'ru', theme: 'dark', openSections: {} },
+    ui: { language: 'ru', theme: 'dark', openSections: {}, onboardingDone: false },
   };
 }
 
@@ -191,8 +191,15 @@ type V4State = {
   ui: { language: string; theme: string; openSections: Record<string, boolean> };
 };
 
-function migrateV4ToV5(raw: V4State): AppState {
-  const scenarios: AppState['scenarios'] = {};
+type V5State = {
+  schemaVersion: 5;
+  activeScenarioId: string;
+  scenarios: Record<string, { id: string; name: string; createdAt: string; updatedAt: string; inputs: Record<string, unknown> }>;
+  ui: { language: string; theme: string; openSections: Record<string, boolean> };
+};
+
+function migrateV4ToV5(raw: V4State): V5State {
+  const scenarios: V5State['scenarios'] = {};
   for (const sid of Object.keys(raw.scenarios)) {
     const old = raw.scenarios[sid];
     scenarios[sid] = {
@@ -203,14 +210,26 @@ function migrateV4ToV5(raw: V4State): AppState {
       inputs: {
         ...old.inputs,
         localCurrency: 'RUB',
-      } as unknown as AppState['scenarios'][string]['inputs'],
+      } as unknown as V5State['scenarios'][string]['inputs'],
     };
   }
   return {
     schemaVersion: 5,
     activeScenarioId: raw.activeScenarioId,
     scenarios,
-    ui: raw.ui as AppState['ui'],
+    ui: raw.ui as V5State['ui'],
+  };
+}
+
+function migrateV5ToV6(raw: V5State): AppState {
+  return {
+    schemaVersion: 6,
+    activeScenarioId: raw.activeScenarioId,
+    scenarios: raw.scenarios as unknown as AppState['scenarios'],
+    ui: {
+      ...raw.ui,
+      onboardingDone: true,
+    } as AppState['ui'],
   };
 }
 
@@ -223,28 +242,34 @@ function migrate(raw: unknown): AppState {
     }
     const v2 = migrateV1ToV2(s as unknown as V1State);
     const v3 = migrateV2ToV3(v2);
-    return migrateV4ToV5(migrateV3ToV4(v3 as unknown as V3State) as unknown as V4State);
+    return migrateV5ToV6(migrateV4ToV5(migrateV3ToV4(v3 as unknown as V3State) as unknown as V4State));
   }
   if (s.schemaVersion === 2) {
     if (typeof s.activeScenarioId !== 'string' || typeof s.scenarios !== 'object' || s.scenarios === null) {
       throw new Error('Invalid state shape');
     }
     const v3 = migrateV2ToV3(s as unknown as V2State);
-    return migrateV4ToV5(migrateV3ToV4(v3 as unknown as V3State) as unknown as V4State);
+    return migrateV5ToV6(migrateV4ToV5(migrateV3ToV4(v3 as unknown as V3State) as unknown as V4State));
   }
   if (s.schemaVersion === 3) {
     if (typeof s.activeScenarioId !== 'string' || typeof s.scenarios !== 'object' || s.scenarios === null) {
       throw new Error('Invalid state shape');
     }
-    return migrateV4ToV5(migrateV3ToV4(s as unknown as V3State) as unknown as V4State);
+    return migrateV5ToV6(migrateV4ToV5(migrateV3ToV4(s as unknown as V3State) as unknown as V4State));
   }
   if (s.schemaVersion === 4) {
     if (typeof s.activeScenarioId !== 'string' || typeof s.scenarios !== 'object' || s.scenarios === null) {
       throw new Error('Invalid state shape');
     }
-    return migrateV4ToV5(s as unknown as V4State);
+    return migrateV5ToV6(migrateV4ToV5(s as unknown as V4State));
   }
-  if (s.schemaVersion !== 5) throw new Error(`Unsupported schemaVersion: ${String(s.schemaVersion)}`);
+  if (s.schemaVersion === 5) {
+    if (typeof s.activeScenarioId !== 'string' || typeof s.scenarios !== 'object' || s.scenarios === null) {
+      throw new Error('Invalid state shape');
+    }
+    return migrateV5ToV6(s as unknown as V5State);
+  }
+  if (s.schemaVersion !== 6) throw new Error(`Unsupported schemaVersion: ${String(s.schemaVersion)}`);
   if (typeof s.activeScenarioId !== 'string' || typeof s.scenarios !== 'object' || s.scenarios === null) {
     throw new Error('Invalid state shape');
   }

@@ -8,7 +8,7 @@ describe('persistence — localStorage', () => {
 
   it('loadState returns defaultState when storage empty', () => {
     const s = loadState();
-    expect(s.schemaVersion).toBe(5);
+    expect(s.schemaVersion).toBe(6);
     expect(Object.keys(s.scenarios)).toHaveLength(1);
   });
 
@@ -23,7 +23,7 @@ describe('persistence — localStorage', () => {
   it('falls back to defaultState on corrupted JSON', () => {
     localStorage.setItem(STORAGE_KEY, 'not-json{{{');
     const s = loadState();
-    expect(s.schemaVersion).toBe(5);
+    expect(s.schemaVersion).toBe(6);
   });
 });
 
@@ -36,7 +36,7 @@ describe('persistence — JSON export/import', () => {
     const json = exportJson(s);
     const parsed = importJson(json);
     expect(parsed.ui.theme).toBe('light');
-    expect(parsed.schemaVersion).toBe(5);
+    expect(parsed.schemaVersion).toBe(6);
   });
 
   it('importJson rejects invalid JSON', () => {
@@ -79,7 +79,7 @@ describe('migrate v1 → v3 (chained)', () => {
       ui: { language: 'ru', theme: 'dark', openSections: {} },
     };
     const v4 = importJson(JSON.stringify(v1));
-    expect(v4.schemaVersion).toBe(5);
+    expect(v4.schemaVersion).toBe(6);
     const inp = v4.scenarios.s1.inputs as any;
     expect(inp.investments).toBeUndefined();
     expect('freeCashRub' in inp).toBe(false);
@@ -114,7 +114,7 @@ describe('migrate v1 → v3 (chained)', () => {
       ui: { language: 'en', theme: 'light', openSections: {} },
     };
     const out = importJson(JSON.stringify(v3));
-    expect(out.schemaVersion).toBe(5);
+    expect(out.schemaVersion).toBe(6);
     const i = out.scenarios.s1.inputs as unknown as Record<string, unknown>;
     expect('freeCashRub'      in i).toBe(false);
     expect('horizonDate'      in i).toBe(false);
@@ -147,7 +147,7 @@ describe('migrate v1 → v3 (chained)', () => {
       ui: { language: 'ru', theme: 'dark', openSections: {} },
     };
     const v4 = importJson(JSON.stringify(v2));
-    expect(v4.schemaVersion).toBe(5);
+    expect(v4.schemaVersion).toBe(6);
     const inp = v4.scenarios.s1.inputs as any;
     expect('savingsPicks' in inp).toBe(false);
     expect('freeCashRub'  in inp).toBe(false);
@@ -182,7 +182,7 @@ describe('migrate v3 → v4', () => {
       ui: { language: 'ru', theme: 'dark', openSections: {} },
     });
     const out = importJson(v3);
-    expect(out.schemaVersion).toBe(5);
+    expect(out.schemaVersion).toBe(6);
     const i = out.scenarios['a'].inputs as unknown as Record<string, unknown>;
     expect('freeCashRub'      in i).toBe(false);
     expect('horizonDate'      in i).toBe(false);
@@ -234,7 +234,7 @@ describe('migrate v3 → v4', () => {
       ui: { language: 'ru', theme: 'dark', openSections: {} },
     });
     const out = importJson(v1);
-    expect(out.schemaVersion).toBe(5);
+    expect(out.schemaVersion).toBe(6);
     expect(Array.isArray(out.scenarios['a'].inputs.savingsInstruments)).toBe(true);
   });
 });
@@ -258,7 +258,7 @@ describe('migrate v4 → v5', () => {
       ui: { language: 'ru', theme: 'dark', openSections: {} },
     });
     const out = importJson(v4);
-    expect(out.schemaVersion).toBe(5);
+    expect(out.schemaVersion).toBe(6);
     expect(out.scenarios['a'].inputs.localCurrency).toBe('RUB');
   });
 
@@ -279,7 +279,58 @@ describe('migrate v4 → v5', () => {
       ui: { language: 'ru', theme: 'dark', openSections: {} },
     });
     const out = importJson(v1);
-    expect(out.schemaVersion).toBe(5);
+    expect(out.schemaVersion).toBe(6);
     expect(out.scenarios['a'].inputs.localCurrency).toBe('RUB');
+  });
+});
+
+describe('migrate v5 → v6', () => {
+  it('adds onboardingDone true to existing state', () => {
+    const v5 = JSON.stringify({
+      schemaVersion: 5,
+      activeScenarioId: 'a',
+      scenarios: {
+        a: {
+          id: 'a', name: 'X', createdAt: '2026-05-01', updatedAt: '2026-05-01',
+          inputs: {
+            returnDate: '2026-05-01', voyageDate: '2026-08-01', salaryLumpSumUsd: 0,
+            assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 }, rubPerUsd: 90,
+            monthlyFamilyRub: 80_000, goals: [], includeExpectedYield: true,
+            savingsInstruments: [], localCurrency: 'RUB',
+          },
+        },
+      },
+      ui: { language: 'ru', theme: 'dark', openSections: {} },
+    });
+    const out = importJson(v5);
+    expect(out.schemaVersion).toBe(6);
+    expect(out.ui.onboardingDone).toBe(true);
+  });
+
+  it('new defaultState has onboardingDone false', () => {
+    const s = defaultState();
+    expect(s.schemaVersion).toBe(6);
+    expect(s.ui.onboardingDone).toBe(false);
+  });
+
+  it('v1 → v6 full chain sets onboardingDone true', () => {
+    const v1 = JSON.stringify({
+      schemaVersion: 1,
+      activeScenarioId: 'a',
+      scenarios: {
+        a: {
+          id: 'a', name: 'X', createdAt: '2026-05-01', updatedAt: '2026-05-01',
+          inputs: {
+            returnDate: '2026-05-01', voyageDate: '2026-08-01', salaryLumpSumUsd: 0,
+            assets: { usdBank: 0, usdCash: 0, rubBank: 0 }, rubPerUsd: 90,
+            monthlyFamilyRub: 0, goals: [], investments: [],
+          },
+        },
+      },
+      ui: { language: 'ru', theme: 'dark', openSections: {} },
+    });
+    const out = importJson(v1);
+    expect(out.schemaVersion).toBe(6);
+    expect(out.ui.onboardingDone).toBe(true);
   });
 });
