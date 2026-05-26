@@ -2,7 +2,7 @@
   import { _ } from 'svelte-i18n';
   import { app, activeInputs } from '../../lib/state/scenarios.svelte';
   import { currentResult } from '../../lib/state/derived';
-  import { formatRub } from '../../lib/format';
+  import { formatLocal } from '../../lib/format';
 
   const inputs = $derived(activeInputs());
   const result = $derived(currentResult());
@@ -29,15 +29,15 @@
     </div>
     <div class="field">
       <span class="field-key">{$_('summary.totalAssetsRub')}</span>
-      <span class="number">{formatRub(totalRubEquiv, app.ui.language)}</span>
+      <span class="number">{formatLocal(totalRubEquiv, app.ui.language, inputs.localCurrency)}</span>
     </div>
     <div class="field">
       <span class="field-key">{$_('summary.outflowWindow')}</span>
-      <span class="number">{formatRub(totalSpent, app.ui.language)}</span>
+      <span class="number">{formatLocal(totalSpent, app.ui.language, inputs.localCurrency)}</span>
     </div>
     <div class="field">
       <span class="field-key">{$_('summary.netAtVoyage')}</span>
-      <span class="number" style="color: var(--accent); font-weight: 600;">{formatRub(netAtVoyage, app.ui.language)}</span>
+      <span class="number" style="color: var(--accent); font-weight: 600;">{formatLocal(netAtVoyage, app.ui.language, inputs.localCurrency)}</span>
     </div>
   </div>
 </section>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
-  import { app, persistSoon } from '../../../lib/state/scenarios.svelte';
-  import { formatRub, formatDate } from '../../../lib/format';
+  import { app, activeInputs, persistSoon } from '../../../lib/state/scenarios.svelte';
+  import { formatLocal, formatDate } from '../../../lib/format';
   import { templateById } from '../../../lib/calc/savingsTemplates';
   import { maturityDate, accruedValue } from '../../../lib/calc/savings';
   import type { SavingsInstrument, Compounding } from '../../../lib/calc/types';
@@ -13,6 +13,7 @@
   };
 
   const { instrument, voyageDate, onDelete }: Props = $props();
+  const inputs = $derived(activeInputs());
 
   const template = $derived(templateById(instrument.templateId));
   const todayISO = new Date().toISOString().slice(0, 10);
@@ -110,7 +111,7 @@
 
   <footer class="inst-status">
     {#if instrument.amountRub > 0 && instrument.annualRatePct > 0}
-      <span class="chip accrued">{$_('savings.status.accrued', { values: { amount: formatRub(interestAtVoyage, app.ui.language) } })}</span>
+      <span class="chip accrued">{$_('savings.status.accrued', { values: { amount: formatLocal(interestAtVoyage, app.ui.language, inputs.localCurrency) } })}</span>
     {/if}
     {#if statusKey === 'maturedAt'}
       <span class="chip gray">{$_('savings.status.maturedAt')}</span>

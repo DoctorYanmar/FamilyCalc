@@ -2,7 +2,7 @@
   import { _ } from 'svelte-i18n';
   import { app, activeInputs } from '../lib/state/scenarios.svelte';
   import { currentResult } from '../lib/state/derived';
-  import { formatRub, formatDate } from '../lib/format';
+  import { formatLocal, formatDate } from '../lib/format';
 
   const inputs = $derived(activeInputs());
   const result = $derived(currentResult());
@@ -34,7 +34,7 @@
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       {$_('kpis.balanceAtVoyage')}
     </div>
-    <div class="kpi-val">{formatRub(result.balanceAtVoyage, app.ui.language)}</div>
+    <div class="kpi-val">{formatLocal(result.balanceAtVoyage, app.ui.language, inputs.localCurrency)}</div>
     <div class="kpi-sub">
       <span>{$_('kpis.onDate')} {formatDate(inputs.voyageDate, app.ui.language)}</span>
     </div>
@@ -58,7 +58,7 @@
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       {$_('kpis.monthlyExpenses')}
     </div>
-    <div class="kpi-val">{formatRub(monthlyExpenses, app.ui.language)}</div>
+    <div class="kpi-val">{formatLocal(monthlyExpenses, app.ui.language, inputs.localCurrency)}</div>
     <div class="kpi-sub"><span>{$_('kpis.perMonth')}</span></div>
   </div>
 </div>

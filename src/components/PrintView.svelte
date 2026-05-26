@@ -2,7 +2,7 @@
   import { _ } from 'svelte-i18n';
   import { app, activeScenario, activeInputs } from '../lib/state/scenarios.svelte';
   import { currentResult } from '../lib/state/derived';
-  import { formatRub, formatUsd, formatDate } from '../lib/format';
+  import { formatLocal, formatUsd, formatDate } from '../lib/format';
 
   const lang = $derived(app.ui.language);
   const inputs = $derived(activeInputs());
@@ -21,7 +21,7 @@
 
   <section>
     <h2>{$_('results.leftOnVoyage')}</h2>
-    <p class="big">{formatRub(r.balanceAtVoyage, lang)} <span class="muted">(≈ {formatUsd(r.balanceAtVoyage / inputs.rubPerUsd, lang)})</span></p>
+    <p class="big">{formatLocal(r.balanceAtVoyage, lang, inputs.localCurrency)} <span class="muted">(≈ {formatUsd(r.balanceAtVoyage / inputs.rubPerUsd, lang)})</span></p>
     <p>{$_('results.runway')}: {$_('results.daysUnit', { values: { n: r.sim.daysOfRunway } })}</p>
     <p>
       {$_('results.runsOut')}:
@@ -39,15 +39,15 @@
 
   <section>
     <h2>{$_('assets.title')}</h2>
-    <p>{$_('assets.usdBank')}: {formatUsd(inputs.assets.usdBank, lang)} ({formatRub(inputs.assets.usdBank * inputs.rubPerUsd, lang)})</p>
-    <p>{$_('assets.usdCash')}: {formatUsd(inputs.assets.usdCash, lang)} ({formatRub(inputs.assets.usdCash * inputs.rubPerUsd, lang)})</p>
-    <p>{$_('assets.rubBank')}: {formatRub(inputs.assets.rubBank, lang)}</p>
-    <p><b>{$_('assets.totalRub')}: {formatRub(totalAssetsRub, lang)}</b></p>
+    <p>{$_('assets.usdBank')}: {formatUsd(inputs.assets.usdBank, lang)} ({formatLocal(inputs.assets.usdBank * inputs.rubPerUsd, lang, inputs.localCurrency)})</p>
+    <p>{$_('assets.usdCash')}: {formatUsd(inputs.assets.usdCash, lang)} ({formatLocal(inputs.assets.usdCash * inputs.rubPerUsd, lang, inputs.localCurrency)})</p>
+    <p>{$_('assets.rubBank')}: {formatLocal(inputs.assets.rubBank, lang, inputs.localCurrency)}</p>
+    <p><b>{$_('assets.totalRub')}: {formatLocal(totalAssetsRub, lang, inputs.localCurrency)}</b></p>
   </section>
 
   <section>
     <h2>{$_('expenses.title')}</h2>
-    <p>{$_('expenses.monthly')}: {formatRub(inputs.monthlyFamilyRub, lang)}</p>
+    <p>{$_('expenses.monthly')}: {formatLocal(inputs.monthlyFamilyRub, lang, inputs.localCurrency)}</p>
   </section>
 
   {#if inputs.goals.length > 0}
@@ -56,7 +56,7 @@
       <ul>
         {#each inputs.goals as g}
           <li>
-            {g.name}: {formatRub(g.amountRub, lang)} —
+            {g.name}: {formatLocal(g.amountRub, lang, inputs.localCurrency)} —
             {g.mode === 'lump' ? formatDate(g.date, lang) : `${formatDate(g.date, lang)} → ${formatDate(g.endDate ?? g.date, lang)}`}
             {#if !g.enabled}<span class="muted">(off)</span>{/if}
           </li>
@@ -73,15 +73,15 @@
           <li>
             <b>{inst.name}</b>
             ({$_(`savings.templates.${inst.templateId}.name`)})
-            — {formatRub(inst.amountRub, lang)},
+            — {formatLocal(inst.amountRub, lang, inputs.localCurrency)},
             {inst.annualRatePct.toFixed(2)}%,
             {inst.termMonths === null ? $_('savings.instrument.termOpen') : `${inst.termMonths} ${$_('savings.instrument.termCustomLabel')}`}
           </li>
         {/each}
       </ul>
       <p>
-        {$_('savings.totals.parked', { values: { amount: formatRub(r.sim.totalPrincipalRub, lang) } })}
-        · {$_('savings.totals.accrued', { values: { amount: formatRub(r.sim.totalAccruedInterestRub, lang) } })}
+        {$_('savings.totals.parked', { values: { amount: formatLocal(r.sim.totalPrincipalRub, lang, inputs.localCurrency) } })}
+        · {$_('savings.totals.accrued', { values: { amount: formatLocal(r.sim.totalAccruedInterestRub, lang, inputs.localCurrency) } })}
       </p>
       <p class="muted">— {$_('savings.disclaimer')}</p>
     </section>

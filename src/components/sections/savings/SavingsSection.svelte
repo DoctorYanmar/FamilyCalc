@@ -2,7 +2,7 @@
   import { _ } from 'svelte-i18n';
   import { app, activeInputs, persistSoon } from '../../../lib/state/scenarios.svelte';
   import { currentResult } from '../../../lib/state/derived';
-  import { formatRub } from '../../../lib/format';
+  import { formatLocal } from '../../../lib/format';
   import { templateById } from '../../../lib/calc/savingsTemplates';
   import type { SavingsInstrument, SavingsTemplateId } from '../../../lib/calc/types';
   import AddInstrumentPicker from './AddInstrumentPicker.svelte';
@@ -89,9 +89,9 @@
           <span>{$_('savings.footer.includeYield')}</span>
         </span>
         <span class="totals">
-          <span>{$_('savings.totals.parked', { values: { amount: formatRub(result.sim.totalPrincipalRub, app.ui.language) } })}</span>
+          <span>{$_('savings.totals.parked', { values: { amount: formatLocal(result.sim.totalPrincipalRub, app.ui.language, inputs.localCurrency) } })}</span>
           <span class="dot">·</span>
-          <span class="accent">{$_('savings.totals.accrued', { values: { amount: formatRub(result.sim.totalAccruedInterestRub, app.ui.language) } })}</span>
+          <span class="accent">{$_('savings.totals.accrued', { values: { amount: formatLocal(result.sim.totalAccruedInterestRub, app.ui.language, inputs.localCurrency) } })}</span>
         </span>
       </footer>
     {/if}

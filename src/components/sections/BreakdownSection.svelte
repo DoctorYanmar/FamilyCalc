@@ -1,11 +1,12 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
-  import { app } from '../../lib/state/scenarios.svelte';
+  import { app, activeInputs } from '../../lib/state/scenarios.svelte';
   import { currentResult } from '../../lib/state/derived';
-  import { formatRub } from '../../lib/format';
+  import { formatLocal } from '../../lib/format';
   import type { DayPoint } from '../../lib/calc/types';
 
   const result = $derived(currentResult());
+  const inputs = $derived(activeInputs());
 
   type MonthRow = { ym: string; open: number; close: number; spent: number; goalsRub: number };
   const rows = $derived.by(() => {
@@ -44,10 +45,10 @@
         {#each rows as r}
           <tr>
             <td class="label">{r.ym}</td>
-            <td class="amount">{formatRub(r.open, app.ui.language)}</td>
-            <td class="amount">{formatRub(r.spent, app.ui.language)}</td>
-            <td class="amount">{formatRub(r.goalsRub, app.ui.language)}</td>
-            <td class="amount" style={r.close < 0 ? 'color:var(--danger)' : ''}>{formatRub(r.close, app.ui.language)}</td>
+            <td class="amount">{formatLocal(r.open, app.ui.language, inputs.localCurrency)}</td>
+            <td class="amount">{formatLocal(r.spent, app.ui.language, inputs.localCurrency)}</td>
+            <td class="amount">{formatLocal(r.goalsRub, app.ui.language, inputs.localCurrency)}</td>
+            <td class="amount" style={r.close < 0 ? 'color:var(--danger)' : ''}>{formatLocal(r.close, app.ui.language, inputs.localCurrency)}</td>
           </tr>
         {/each}
       </tbody>
