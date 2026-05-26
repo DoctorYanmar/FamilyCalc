@@ -129,6 +129,7 @@
   .inst-name { flex: 1; min-width: 0; font-weight: 600; text-align: left; }
   .inst-actions { display: inline-flex; gap: var(--gap-2); align-items: center; flex-shrink: 0; }
   .inst-fields { display: grid; }
+  .inst-fields :global(.select) { width: 180px; }
   .inst-status { display: flex; flex-wrap: wrap; gap: var(--gap-2); padding-top: var(--gap-3); border-top: 1px solid var(--border); }
   .chip { padding: 2px 8px; border-radius: 999px; font-size: var(--t-sm); font-family: var(--mono); border: 1px solid var(--border-soft); }
   .chip.accrued { color: var(--accent); border-color: var(--accent); }
