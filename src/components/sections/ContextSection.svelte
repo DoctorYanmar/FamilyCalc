@@ -56,9 +56,9 @@
 </CollapsibleCard>
 
 <style>
-  /* The .stepper-val is a span in global.css; here it's an <input> so we have
-     to reset native input chrome and re-apply the visual rhythm. The .stepper
-     wrapper enforces the widget sizing (no user-config width on the input). */
+  .field > :global(.select) {
+    width: 180px;
+  }
   .stepper > .stepper-val {
     all: unset;
     border-left: 1px solid var(--border);
