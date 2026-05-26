@@ -1,6 +1,7 @@
 <script lang="ts">
   import { _ } from 'svelte-i18n';
-  import { SAVINGS_TEMPLATES, type SavingsTemplate } from '../../../lib/calc/savingsTemplates';
+  import { templatesForLocale, type SavingsTemplate } from '../../../lib/calc/savingsTemplates';
+  import { app } from '../../../lib/state/scenarios.svelte';
   import type { SavingsTemplateId } from '../../../lib/calc/types';
 
   type Props = {
@@ -26,7 +27,7 @@
 <div class="picker" role="group" aria-label={$_('savings.picker.title')}>
   <header class="picker-head">{$_('savings.picker.title')}</header>
   <ul class="picker-list">
-    {#each SAVINGS_TEMPLATES as t (t.id)}
+    {#each templatesForLocale(app.ui.language) as t (t.id)}
       <li class="picker-row" class:selected={selected === t.id}>
         <button type="button" class="picker-btn" onclick={() => pick(t)}>
           <span class="radio" aria-hidden="true"></span>
