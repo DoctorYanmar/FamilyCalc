@@ -3,7 +3,6 @@
   import { app, activeScenario, activeInputs } from '../lib/state/scenarios.svelte';
   import { currentResult } from '../lib/state/derived';
   import { formatRub, formatUsd, formatDate } from '../lib/format';
-  import type { LayerKey } from '../lib/calc/types';
 
   const lang = $derived(app.ui.language);
   const inputs = $derived(activeInputs());
@@ -12,16 +11,6 @@
   const totalAssetsRub = $derived(
     inputs.assets.rubBank + inputs.assets.usdBank * inputs.rubPerUsd + inputs.assets.usdCash * inputs.rubPerUsd
   );
-
-  const layerKeys: LayerKey[] = ['A', 'B', 'C'];
-
-  function fmtPct(n: number): string {
-    return (Math.round(n * 10) / 10).toFixed(1);
-  }
-
-  const grandMid  = $derived(r.alloc.layers.A.incomeMidRub + r.alloc.layers.B.incomeMidRub + r.alloc.layers.C.incomeMidRub);
-  const grandLow  = $derived(r.alloc.layers.A.incomeRangeRub.low + r.alloc.layers.B.incomeRangeRub.low + r.alloc.layers.C.incomeRangeRub.low);
-  const grandHigh = $derived(r.alloc.layers.A.incomeRangeRub.high + r.alloc.layers.B.incomeRangeRub.high + r.alloc.layers.C.incomeRangeRub.high);
 </script>
 
 <div class="print-only print-view">
@@ -76,75 +65,27 @@
     </section>
   {/if}
 
-  <section>
-    <h2>{$_('savings.print.title')}</h2>
-    <p>
-      {$_('savings.print.regimeLine', { values: {
-        regime: $_(`savings.regime.${r.alloc.regime}`),
-        pct: inputs.cbrKeyRatePct,
-        date: formatDate(inputs.cbrRateUpdatedAt, lang),
-      } })}
-    </p>
-    <p>
-      {$_('savings.print.horizonLine', { values: {
-        date: formatDate(inputs.horizonDate, lang),
-        days: r.alloc.horizonDays,
-      } })}
-    </p>
-
-    {#each layerKeys as k}
-      {@const info = r.alloc.layers[k]}
-      {@const picks = inputs.savingsPicks[k]}
-      <div class="print-layer">
-        <h3>
-          {$_('savings.print.layerLine', { values: {
-            layer: k,
-            name: $_(`savings.layer.${k}.name`).split('·').pop()?.trim() ?? k,
-            window: $_(`savings.layer.${k}.window`),
-            amount: formatRub(info.amountRub, lang),
-            preset: $_(`savings.preset.${picks.preset}`),
-          } })}
-        </h3>
-        {#if info.pickedClasses.length > 0}
-          <ul>
-            {#each info.pickedClasses as p}
-              <li>
-                {$_(`savings.classes.${p.cls.id}.name`)} —
-                {formatRub(p.share, lang)} —
-                {fmtPct(inputs.cbrKeyRatePct + p.cls.cbrOffset.low)}–{fmtPct(inputs.cbrKeyRatePct + p.cls.cbrOffset.high)}% p.a. —
-                [{$_(`savings.riskBadge.${p.cls.risk}`)}]
-              </li>
-            {/each}
-          </ul>
-        {/if}
-        <p class="subtotal">
-          {$_('savings.print.layerSubtotal', { values: {
-            window: $_(`savings.layer.${k}.window`),
-            mid: formatRub(info.incomeMidRub, lang),
-            low: formatRub(info.incomeRangeRub.low, lang),
-            high: formatRub(info.incomeRangeRub.high, lang),
-          } })}
-        </p>
-      </div>
-    {/each}
-
-    <p class="grand-total">
-      {$_('savings.print.grandTotal', { values: {
-        mid: formatRub(grandMid, lang),
-        low: formatRub(grandLow, lang),
-        high: formatRub(grandHigh, lang),
-      } })}
-    </p>
-
-    <p class="muted">— {$_('savings.taxBanner', { values: { amount: formatRub(r.alloc.taxThresholdRub, lang) } })}</p>
-    {#each r.alloc.asvWarningLayers as l}
-      <p class="muted">— {l}: {$_('savings.asvWarning')}</p>
-    {/each}
-    <p class="muted">— {$_('savings.disclaimer')}</p>
-
-    <h3>{$_('savings.print.riskMethodologyHeading')}</h3>
-    <p class="muted">{$_('savings.riskBadge.methodology')}</p>
-  </section>
+  {#if inputs.savingsInstruments.length > 0}
+    <section>
+      <h2>{$_('savings.title')}</h2>
+      <ul>
+        {#each inputs.savingsInstruments.filter(i => i.enabled) as inst (inst.id)}
+          <li>
+            <b>{inst.name}</b>
+            ({$_(`savings.templates.${inst.templateId}.name`)})
+            — {formatRub(inst.amountRub, lang)},
+            {inst.annualRatePct.toFixed(2)}%,
+            {inst.termMonths === null ? $_('savings.instrument.termOpen') : `${inst.termMonths} ${$_('savings.instrument.termCustomLabel')}`}
+          </li>
+        {/each}
+      </ul>
+      <p>
+        {$_('savings.totals.parked', { values: { amount: formatRub(r.sim.totalPrincipalRub, lang) } })}
+        · {$_('savings.totals.accrued', { values: { amount: formatRub(r.sim.totalAccruedInterestRub, lang) } })}
+      </p>
+      <p class="muted">— {$_('savings.disclaimer')}</p>
+    </section>
+  {/if}
 </div>
 
 <style>
@@ -184,13 +125,4 @@
   .print-view .muted { color: #6e6655; }
   .print-view ul { margin: 0; padding-left: 18px; list-style: none; }
   .print-view li::before { content: '· '; color: #b8651d; }
-  .print-view .print-layer { margin: 8px 0 12px; }
-  .print-view .print-layer h3 {
-    font-size: 11pt; margin: 6px 0 4px;
-    letter-spacing: 0.04em; text-transform: none;
-    color: #1a1815;
-  }
-  .print-view .print-layer h3::before { content: ''; }
-  .print-view .subtotal { font-weight: 600; margin: 4px 0; }
-  .print-view .grand-total { font-weight: 700; margin: 10px 0; border-top: 1px solid #1a1815; padding-top: 6px; }
 </style>
