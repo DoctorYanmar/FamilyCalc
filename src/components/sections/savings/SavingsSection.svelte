@@ -50,7 +50,7 @@
   }
 </script>
 
-<section class="card">
+<section class="card" data-tour="savings">
   <header class="card-head">
     <h2>{$_('savings.title')}</h2>
   </header>

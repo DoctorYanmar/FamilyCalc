@@ -96,12 +96,13 @@ export type Language = 'ru' | 'en';
 export type Theme = 'dark' | 'light';
 
 export type AppState = {
-  schemaVersion: 5;
+  schemaVersion: 6;
   activeScenarioId: ID;
   scenarios: Record<ID, Scenario>;
   ui: {
     language: Language;
     theme: Theme;
     openSections: Record<string, boolean>;
+    onboardingDone: boolean;
   };
 };

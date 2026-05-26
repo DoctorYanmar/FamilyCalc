@@ -40,6 +40,7 @@
 <CollapsibleCard
   title={$_('goals.title')}
   meta={$_('goals.meta', { values: { total: inputs.goals.length, enabled: enabledCount } })}
+  dataTour="goals"
 >
   <div class="goals-list">
     <div class="goals-row header">

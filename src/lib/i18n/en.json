@@ -140,5 +140,18 @@
   "kpis.drainsOn": "drains",
   "kpis.notDraining": "covered through voyage",
   "kpis.monthlyExpenses": "Monthly expenses",
-  "kpis.perMonth": "monthly budget"
+  "kpis.perMonth": "monthly budget",
+  "onboarding.privacy": "Your data stays in your browser and never leaves your device.",
+  "onboarding.context": "Set your leave dates and exchange rate here. When did you come home, when do you sail next?",
+  "onboarding.assets": "Enter your current balances — bank accounts and cash in hand, both USD and local currency.",
+  "onboarding.expenses": "How much does your family spend per month? The app calculates the daily burn automatically.",
+  "onboarding.goals": "Add one-time purchases or payments — a car, tuition, a vacation. Set the date and amount.",
+  "onboarding.savings": "Track savings instruments — deposits, bonds, funds. The calculator accounts for locked money and interest.",
+  "onboarding.kpis": "This is your dashboard — money left on voyage date, runway, and monthly expenses at a glance.",
+  "onboarding.chart": "The chart shows your balance over time so you can see when money runs out.",
+  "onboarding.pwa": "To use this app offline, tap Share → Add to Home Screen in Safari.",
+  "onboarding.next": "Next",
+  "onboarding.skip": "Skip",
+  "onboarding.done": "Done",
+  "onboarding.replay": "Show tips"
 }

@@ -32,7 +32,7 @@
   }
 </script>
 
-<CollapsibleCard title={$_('context.title')}>
+<CollapsibleCard title={$_('context.title')} dataTour="context">
   <DateInput label={$_('context.returnDate')} value={inputs.returnDate} onChange={setReturn} />
   <DateInput label={$_('context.voyageDate')} value={inputs.voyageDate} onChange={setVoyage} />
   <label class="field">
