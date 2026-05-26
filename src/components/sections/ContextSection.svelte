@@ -63,7 +63,7 @@
   @media (max-width: 480px) {
     .field > :global(.select) {
       width: 100%;
-      text-align: left;
+      text-align: center;
       font-size: var(--t-lg);
     }
   }
