@@ -7,7 +7,6 @@
   const inputs = $derived(activeInputs());
   const result = $derived(currentResult());
 
-  const regime = $derived(result.alloc.regime);
   const onTrack = $derived(result.sim.runsOutOn === null);
   const daysToVoyage = $derived(Math.max(0, result.sim.days.length - 1));
   const monthlyExpenses = $derived(inputs.monthlyFamilyRub);
@@ -25,16 +24,6 @@
       <strong>{formatDate(inputs.voyageDate, app.ui.language)}</strong>
       · {$_('status.daysFromNow', { values: { n: daysToVoyage } })}
     </span>
-  </div>
-  <div class="subbar-group">
-    {#if regime === 'high'}
-      <span class="status-pill warn"><span class="dot"></span>{$_('status.highRateRegime')}</span>
-    {:else if regime === 'moderate'}
-      <span class="status-pill info"><span class="dot"></span>{$_('status.moderateRegime')}</span>
-    {:else}
-      <span class="status-pill"><span class="dot"></span>{$_('status.lowRateRegime')}</span>
-    {/if}
-    <span class="subbar-meta">{$_('status.cbrLabel')} <strong>{inputs.cbrKeyRatePct.toFixed(2)}%</strong></span>
   </div>
 </div>
 
