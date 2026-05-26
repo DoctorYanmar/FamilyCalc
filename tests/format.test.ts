@@ -6,6 +6,17 @@ describe('format helpers', () => {
     expect(formatRub(1_250_000, 'ru')).toMatch(/1\s?250\s?000/);
     expect(formatRub(1_250_000, 'en')).toMatch(/1,250,000/);
   });
+  it('formatRub — RU uses ₽ currency symbol', () => {
+    const result = formatRub(1_250_000, 'ru');
+    expect(result).toMatch(/₽/);
+  });
+  it('formatRub — EN uses LC suffix instead of ₽', () => {
+    const result = formatRub(1_250_000, 'en');
+    expect(result).toMatch(/LC/);
+    expect(result).not.toMatch(/₽/);
+    expect(result).not.toMatch(/RUB/);
+    expect(result).toMatch(/1,250,000/);
+  });
   it('formats USD without decimals', () => {
     expect(formatUsd(13_888, 'en')).toMatch(/\$\s?13,888/);
   });
