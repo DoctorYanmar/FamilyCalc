@@ -171,6 +171,8 @@
 </script>
 
 {#if !app.ui.onboardingDone && steps.length > 0}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="tour-backdrop" style:clip-path={clipPath()} onclick={finish}></div>
 
   <div
