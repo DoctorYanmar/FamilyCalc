@@ -72,7 +72,7 @@
                value={instrument.amountRub === 0 ? '' : instrument.amountRub}
                placeholder="0"
                oninput={(e) => setAmount((e.target as HTMLInputElement).value)} />
-        <span class="suffix">₽</span>
+        <span class="suffix">{app.ui.language === 'ru' ? '₽' : 'LC'}</span>
       </span>
     </label>
     <label class="field">
