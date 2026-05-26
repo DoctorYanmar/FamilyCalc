@@ -1,4 +1,5 @@
 import type { Inputs, SimulationResult, DayPoint, AssetMix, GoalEvent } from './types';
+import { maturityDate, accruedValue } from './savings';
 
 const MS_PER_DAY = 86_400_000;
 const DAYS_PER_MONTH = 30.4375;  // 365.25 / 12 (Gregorian average)
@@ -51,6 +52,8 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
       runsOutOn: null,
       daysOfRunway: 0,
       totalSpentRub: 0,
+      totalPrincipalRub: 0,
+      totalAccruedInterestRub: 0,
     };
   }
 
@@ -118,11 +121,36 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
     ? days.findIndex(d => d.date === runsOutOn)
     : totalDays - 1;
 
+  // Savings 2.0 at-voyage accrued bonus.
+  let totalPrincipalRub = 0;
+  let totalAccruedInterestRub = 0;
+  let accruedBonus = 0;
+  for (const si of inputs.savingsInstruments) {
+    if (!si.enabled) continue;
+    const m = maturityDate(si);
+    const stillLockedAtVoyage = m === null || m.getTime() > voyage.getTime();
+    if (!stillLockedAtVoyage) {
+      // Will mature in-window — Task 5 handles the payout into rubBank.
+      // For now, count toward totals only.
+      totalPrincipalRub += si.amountRub;
+      totalAccruedInterestRub += accruedValue(si, m!) - si.amountRub;
+      continue;
+    }
+    const valueAtVoyage = accruedValue(si, voyage);
+    const isOpenEnded = m === null;
+    const bonusInterest = (inputs.includeExpectedYield || isOpenEnded) ? valueAtVoyage - si.amountRub : 0;
+    accruedBonus += si.amountRub + bonusInterest;
+    totalPrincipalRub += si.amountRub;
+    totalAccruedInterestRub += bonusInterest;
+  }
+
   return {
     days,
-    balanceAtVoyage: days[days.length - 1].totalRub,
+    balanceAtVoyage: days[days.length - 1].totalRub + accruedBonus,
     runsOutOn,
     daysOfRunway,
     totalSpentRub: totalSpent,
+    totalPrincipalRub,
+    totalAccruedInterestRub,
   };
 }

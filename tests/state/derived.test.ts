@@ -9,6 +9,8 @@ function fakeSim(balance: number): SimulationResult {
     runsOutOn: null,
     daysOfRunway: 0,
     totalSpentRub: 0,
+    totalPrincipalRub: 0,
+    totalAccruedInterestRub: 0,
   };
 }
 

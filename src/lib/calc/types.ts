@@ -111,6 +111,8 @@ export type SimulationResult = {
   runsOutOn: ISODate | null;
   daysOfRunway: number;
   totalSpentRub: number;
+  totalPrincipalRub: number;
+  totalAccruedInterestRub: number;
 };
 
 export type LayerInfo = {

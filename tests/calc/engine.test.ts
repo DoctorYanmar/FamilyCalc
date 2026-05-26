@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { simulate } from '../../src/lib/calc/engine';
-import type { Inputs, SavingsPicks } from '../../src/lib/calc/types';
+import type { Inputs, SavingsPicks, SavingsInstrument } from '../../src/lib/calc/types';
+import { maturityDate, accruedValue as savingsAccrued } from '../../src/lib/calc/savings';
 
 const EMPTY_PICKS: SavingsPicks = {
   A: { preset: 'custom', classes: {} },
@@ -245,5 +246,104 @@ describe('engine — savingsPicks invariance', () => {
     expect(a.runsOutOn).toBe(b.runsOutOn);
     expect(a.daysOfRunway).toBe(b.daysOfRunway);
     expect(a.totalSpentRub).toBe(b.totalSpentRub);
+  });
+});
+
+function inst(overrides: Partial<SavingsInstrument>): SavingsInstrument {
+  return {
+    id: 's1',
+    name: 'Test',
+    templateId: 'term_deposit',
+    amountRub: 500_000,
+    annualRatePct: 16,
+    startDate: '2026-05-01',
+    termMonths: 12,
+    compounding: 'monthly',
+    enabled: true,
+    ...overrides,
+  };
+}
+
+describe('simulate — savings at-voyage bonus', () => {
+  it('assets.rubBank is unaffected at sim start by adding an enabled instrument', () => {
+    const noSav = simulate({ ...emptyInputs() }, new Date('2026-05-01T00:00:00Z'));
+    const withSav = simulate(
+      { ...emptyInputs(), savingsInstruments: [inst({ amountRub: 500_000 })] },
+      new Date('2026-05-01T00:00:00Z'),
+    );
+    expect(withSav.days[0].totalRub).toBe(noSav.days[0].totalRub);
+  });
+
+  it('term outlasts voyage + includeExpectedYield: true → balanceAtVoyage = wallet + principal + accrued', () => {
+    const today = new Date('2026-05-01T00:00:00Z');
+    const inputs: Inputs = {
+      ...emptyInputs(),
+      voyageDate: '2026-08-01',
+      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      includeExpectedYield: true,
+      savingsInstruments: [inst({ amountRub: 500_000, startDate: '2026-05-01', termMonths: 12 })],
+    };
+    const r = simulate(inputs, today);
+    const voyage = new Date('2026-08-01T00:00:00Z');
+    const expected = 100_000 + savingsAccrued(inputs.savingsInstruments[0], voyage);
+    expect(r.balanceAtVoyage).toBeCloseTo(expected, 2);
+  });
+
+  it('term outlasts voyage + includeExpectedYield: false → balanceAtVoyage = wallet + principal (no interest)', () => {
+    const today = new Date('2026-05-01T00:00:00Z');
+    const inputs: Inputs = {
+      ...emptyInputs(),
+      voyageDate: '2026-08-01',
+      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      includeExpectedYield: false,
+      savingsInstruments: [inst({ amountRub: 500_000, startDate: '2026-05-01', termMonths: 12 })],
+    };
+    const r = simulate(inputs, today);
+    expect(r.balanceAtVoyage).toBeCloseTo(100_000 + 500_000, 2);
+  });
+
+  it('open-ended at voyage → balanceAtVoyage includes full accrued regardless of toggle', () => {
+    const today = new Date('2026-05-01T00:00:00Z');
+    const base: Inputs = {
+      ...emptyInputs(),
+      voyageDate: '2026-08-01',
+      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      savingsInstruments: [inst({ amountRub: 500_000, startDate: '2026-05-01', termMonths: null, compounding: 'daily' })],
+    };
+    const on  = simulate({ ...base, includeExpectedYield: true  }, today);
+    const off = simulate({ ...base, includeExpectedYield: false }, today);
+    expect(on.balanceAtVoyage).toBeCloseTo(off.balanceAtVoyage, 2);
+  });
+
+  it('disabled instrument is ignored entirely', () => {
+    const today = new Date('2026-05-01T00:00:00Z');
+    const inputs: Inputs = {
+      ...emptyInputs(),
+      voyageDate: '2026-08-01',
+      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      includeExpectedYield: true,
+      savingsInstruments: [inst({ amountRub: 500_000, enabled: false })],
+    };
+    const r = simulate(inputs, today);
+    expect(r.balanceAtVoyage).toBeCloseTo(100_000, 2);
+    expect(r.totalPrincipalRub).toBe(0);
+    expect(r.totalAccruedInterestRub).toBe(0);
+  });
+
+  it('totalPrincipalRub + totalAccruedInterestRub track enabled instruments only', () => {
+    const today = new Date('2026-05-01T00:00:00Z');
+    const inputs: Inputs = {
+      ...emptyInputs(),
+      voyageDate: '2026-08-01',
+      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      includeExpectedYield: true,
+      savingsInstruments: [
+        inst({ id: 'a', amountRub: 500_000, enabled: true }),
+        inst({ id: 'b', amountRub: 300_000, enabled: false }),
+      ],
+    };
+    const r = simulate(inputs, today);
+    expect(r.totalPrincipalRub).toBe(500_000);
+    expect(r.totalAccruedInterestRub).toBeGreaterThan(0);
   });
 });
