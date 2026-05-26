@@ -166,9 +166,8 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
     const stillLockedAtVoyage = m === null || m.getTime() > voyage.getTime();
     if (stillLockedAtVoyage) {
       const valueAtVoyage = accruedValue(si, voyage);
-      const isOpenEnded = m === null;
-      const bonusInterest = (inputs.includeExpectedYield || isOpenEnded) ? valueAtVoyage - si.amountRub : 0;
-      accruedBonus += si.amountRub + bonusInterest;
+      const bonusInterest = inputs.includeExpectedYield ? valueAtVoyage - si.amountRub : 0;
+      accruedBonus += bonusInterest;
       totalPrincipalRub += si.amountRub;
       totalAccruedInterestRub += bonusInterest;
     } else {

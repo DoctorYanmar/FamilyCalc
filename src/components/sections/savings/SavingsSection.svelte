@@ -58,7 +58,7 @@
   <div class="card-body">
     {#if inputs.savingsInstruments.length === 0}
       <p class="zero-body">{$_('savings.zeroState.body')}</p>
-      <button type="button" class="btn primary" onclick={() => (pickerOpen = true)}>{$_('savings.zeroState.add')}</button>
+      <button type="button" class="btn btn-block" onclick={() => (pickerOpen = true)}>{$_('savings.zeroState.add')}</button>
       {#if pickerOpen}
         <div class="picker-wrap">
           <AddInstrumentPicker onAdd={addInstrument} onCancel={() => (pickerOpen = false)} />
@@ -76,7 +76,7 @@
           <AddInstrumentPicker onAdd={addInstrument} onCancel={() => (pickerOpen = false)} />
         </div>
       {:else}
-        <button type="button" class="btn" onclick={() => (pickerOpen = true)}>{$_('savings.zeroState.add')}</button>
+        <button type="button" class="btn btn-block" onclick={() => (pickerOpen = true)}>{$_('savings.zeroState.add')}</button>
       {/if}
 
       <footer class="sav-foot">

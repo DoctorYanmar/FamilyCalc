@@ -211,7 +211,7 @@ describe('simulate — savings at-voyage bonus', () => {
     expect(withSav.days[0].totalRub).toBe(noSav.days[0].totalRub - 50_000);
   });
 
-  it('term outlasts voyage + includeExpectedYield: true → balanceAtVoyage = wallet + accrued interest only', () => {
+  it('term outlasts voyage + includeExpectedYield: true → balanceAtVoyage = wallet - principal + interest', () => {
     const today = new Date('2026-05-01T00:00:00Z');
     const inputs: Inputs = {
       ...emptyInputs(),
@@ -223,10 +223,10 @@ describe('simulate — savings at-voyage bonus', () => {
     const r = simulate(inputs, today);
     const voyage = new Date('2026-08-01T00:00:00Z');
     const interest = savingsAccrued(inputs.savingsInstruments[0], voyage) - 500_000;
-    expect(r.balanceAtVoyage).toBeCloseTo(600_000 + interest, 2);
+    expect(r.balanceAtVoyage).toBeCloseTo(100_000 + interest, 2);
   });
 
-  it('term outlasts voyage + includeExpectedYield: false → balanceAtVoyage = wallet (no interest)', () => {
+  it('term outlasts voyage + includeExpectedYield: false → balanceAtVoyage = wallet - principal', () => {
     const today = new Date('2026-05-01T00:00:00Z');
     const inputs: Inputs = {
       ...emptyInputs(),
@@ -236,20 +236,21 @@ describe('simulate — savings at-voyage bonus', () => {
       savingsInstruments: [inst({ amountRub: 500_000, startDate: '2026-05-01', termMonths: 12 })],
     };
     const r = simulate(inputs, today);
-    expect(r.balanceAtVoyage).toBeCloseTo(600_000, 2);
+    expect(r.balanceAtVoyage).toBeCloseTo(100_000, 2);
   });
 
-  it('open-ended at voyage → balanceAtVoyage includes full accrued regardless of toggle', () => {
+  it('open-ended: toggle controls interest inclusion (not always-on)', () => {
     const today = new Date('2026-05-01T00:00:00Z');
     const base: Inputs = {
       ...emptyInputs(),
       voyageDate: '2026-08-01',
-      assets: { usdBank: 0, usdCash: 0, rubBank: 100_000 },
+      assets: { usdBank: 0, usdCash: 0, rubBank: 600_000 },
       savingsInstruments: [inst({ amountRub: 500_000, startDate: '2026-05-01', termMonths: null, compounding: 'daily' })],
     };
     const on  = simulate({ ...base, includeExpectedYield: true  }, today);
     const off = simulate({ ...base, includeExpectedYield: false }, today);
-    expect(on.balanceAtVoyage).toBeCloseTo(off.balanceAtVoyage, 2);
+    expect(off.balanceAtVoyage).toBeCloseTo(100_000, 2);
+    expect(on.balanceAtVoyage).toBeGreaterThan(off.balanceAtVoyage);
   });
 
   it('disabled instrument is ignored entirely', () => {
@@ -306,7 +307,7 @@ describe('simulate — savings in-window maturity', () => {
     expect(at - before).toBeCloseTo(payout, 2);
   });
 
-  it('matured payout returns interest to wallet (principal was drained at start)', () => {
+  it('matured in-window: payout returns full value, net = wallet + interest', () => {
     const today = new Date('2026-05-01T00:00:00Z');
     const i = inst({ amountRub: 500_000, startDate: '2026-05-01', termMonths: 3, compounding: 'monthly' });
     const inputs: Inputs = {
@@ -317,8 +318,7 @@ describe('simulate — savings in-window maturity', () => {
       savingsInstruments: [i],
     };
     const r = simulate(inputs, today);
-    const matValue = savingsAccrued(i, maturityDate(i)!);
-    const interest = matValue - 500_000;
+    const interest = savingsAccrued(i, maturityDate(i)!) - 500_000;
     expect(r.balanceAtVoyage).toBeCloseTo(600_000 + interest, 2);
   });
 
@@ -367,9 +367,10 @@ describe('simulate — savings in-window maturity', () => {
       savingsInstruments: [a, b],
     };
     const r = simulate(inputs, today);
-    const voyage = new Date('2026-12-01T00:00:00Z');
     const interestA = savingsAccrued(a, maturityDate(a)!) - 300_000;
-    const interestB = savingsAccrued(b, voyage) - 200_000;
-    expect(r.balanceAtVoyage).toBeCloseTo(600_000 + interestA + interestB, 2);
+    const interestB = savingsAccrued(b, new Date('2026-12-01T00:00:00Z')) - 200_000;
+    // a matures in-window: drain 300k at start, payout (300k+interestA) during loop → net +interestA
+    // b still locked: drain 200k at start, accruedBonus = interestB only → net -200k+interestB
+    expect(r.balanceAtVoyage).toBeCloseTo(600_000 - 200_000 + interestA + interestB, 2);
   });
 });
