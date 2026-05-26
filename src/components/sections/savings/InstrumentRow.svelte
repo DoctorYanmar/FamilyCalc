@@ -91,7 +91,7 @@
     </label>
     <label class="field">
       <span class="field-key">{$_('savings.instrument.term')}</span>
-      <select class="input" disabled={template.termFixed} value={termValueAttr} onchange={(e) => setTerm((e.target as HTMLSelectElement).value)}>
+      <select class="select" disabled={template.termFixed} value={termValueAttr} onchange={(e) => setTerm((e.target as HTMLSelectElement).value)}>
         <option value="open">{$_('savings.instrument.termOpen')}</option>
         {#each termOptions as m}
           <option value={String(m)}>{m} {$_('savings.instrument.termCustomLabel')}</option>
@@ -100,7 +100,7 @@
     </label>
     <label class="field">
       <span class="field-key">{$_('savings.instrument.compounding')}</span>
-      <select class="input" value={instrument.compounding} onchange={(e) => setCompounding((e.target as HTMLSelectElement).value)}>
+      <select class="select" value={instrument.compounding} onchange={(e) => setCompounding((e.target as HTMLSelectElement).value)}>
         <option value="daily">{$_('savings.instrument.compoundingDaily')}</option>
         <option value="monthly">{$_('savings.instrument.compoundingMonthly')}</option>
         <option value="at-maturity">{$_('savings.instrument.compoundingAtMaturity')}</option>
