@@ -43,36 +43,6 @@ export type SavingsInstrument = {
   enabled: boolean;
 };
 
-export type Regime = 'high' | 'moderate' | 'low';
-export type LayerKey = 'A' | 'B' | 'C';
-export type Liquidity = 'daily' | 'fixed-term' | 'secondary-market';
-export type ClassCurrency = 'RUB' | 'USD-settled' | 'CNY' | 'Gold';
-export type Risk = 'cons' | 'std' | 'high';
-
-export type InstrumentClass = {
-  id: string;
-  liquidity: Liquidity;
-  cbrOffset: { low: number; high: number };
-  currency: ClassCurrency;
-  isDeposit: boolean;
-  applicableLayers: LayerKey[];
-  applicableRegimes: Regime[];
-  risk: Risk;
-};
-
-export type LayerOverride = { A?: number; B?: number; C?: number };
-
-export type Preset = 'cons' | 'bal' | 'all' | 'custom';
-
-export type ClassPick = { share: number };
-
-export type LayerPicks = {
-  preset: Preset;
-  classes: Record<string, ClassPick>;
-};
-
-export type SavingsPicks = { A: LayerPicks; B: LayerPicks; C: LayerPicks };
-
 export type Inputs = {
   returnDate: ISODate;
   voyageDate: ISODate;
@@ -81,14 +51,7 @@ export type Inputs = {
   rubPerUsd: number;
   monthlyFamilyRub: number;
   goals: Goal[];
-  // savings framework
-  freeCashRub: number;
-  horizonDate: ISODate;
-  cbrKeyRatePct: number;
-  cbrRateUpdatedAt: ISODate;
-  layerOverride: LayerOverride;
   includeExpectedYield: boolean;
-  savingsPicks: SavingsPicks;
   savingsInstruments: SavingsInstrument[];
 };
 
@@ -113,31 +76,6 @@ export type SimulationResult = {
   totalSpentRub: number;
   totalPrincipalRub: number;
   totalAccruedInterestRub: number;
-};
-
-export type LayerInfo = {
-  amountRub: number;
-  timeDays: number;
-  candidates: InstrumentClass[];
-  pickedClasses: Array<{
-    cls: InstrumentClass;
-    share: number;
-    incomeLow: number;
-    incomeHigh: number;
-    incomeMid: number;
-  }>;
-  incomeRangeRub: { low: number; high: number };
-  incomeMidRub: number;
-  unallocatedRub: number;
-  overAllocatedRub: number;
-};
-
-export type AllocationResult = {
-  regime: Regime;
-  horizonDays: number;
-  layers: { A: LayerInfo; B: LayerInfo; C: LayerInfo };
-  taxThresholdRub: number;
-  asvWarningLayers: LayerKey[];
 };
 
 export type CombinedResult = {

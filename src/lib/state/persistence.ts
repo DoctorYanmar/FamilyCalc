@@ -1,5 +1,4 @@
-import type { AppState, Scenario, SavingsPicks } from '../calc/types';
-import { autoAllocateLayerAmounts, autoFillFromPreset, candidatesFor, regimeFor } from '../calc/allocate';
+import type { AppState, Scenario } from '../calc/types';
 
 export const STORAGE_KEY = 'familycalc.state.v1';
 
@@ -22,17 +21,7 @@ function defaultScenario(id: string): Scenario {
       rubPerUsd: 90,
       monthlyFamilyRub: 0,
       goals: [],
-      freeCashRub: 0,
-      horizonDate: today,
-      cbrKeyRatePct: 16.0,
-      cbrRateUpdatedAt: today,
-      layerOverride: {},
-      includeExpectedYield: false,
-      savingsPicks: {
-        A: { preset: 'cons', classes: {} },
-        B: { preset: 'cons', classes: {} },
-        C: { preset: 'bal',  classes: {} },
-      },
+      includeExpectedYield: true,
       savingsInstruments: [],
     },
   };
@@ -68,7 +57,22 @@ type V1State = {
   ui: { language: string; theme: string; openSections: Record<string, boolean> };
 };
 
-type V2Inputs = Omit<Scenario['inputs'], 'savingsPicks'>;
+type V2Inputs = {
+  returnDate: string;
+  voyageDate: string;
+  salaryLumpSumUsd: number;
+  assets: { usdBank: number; usdCash: number; rubBank: number };
+  rubPerUsd: number;
+  monthlyFamilyRub: number;
+  goals: unknown[];
+  freeCashRub: number;
+  horizonDate: string;
+  cbrKeyRatePct: number;
+  cbrRateUpdatedAt: string;
+  layerOverride: unknown;
+  includeExpectedYield: boolean;
+  savingsInstruments: never[];
+};
 type V2State = {
   schemaVersion: 2;
   activeScenarioId: string;
@@ -117,30 +121,19 @@ function migrateV1ToV2(raw: V1State): V2State {
 }
 
 function migrateV2ToV3(raw: V2State): V3State {
-  const today = new Date();
   const scenarios: V3State['scenarios'] = {};
   for (const sid of Object.keys(raw.scenarios)) {
     const old = raw.scenarios[sid];
-    const oi = old.inputs;
-    const amounts = autoAllocateLayerAmounts(oi, today);
-    const regime  = regimeFor(oi.cbrKeyRatePct);
-    const candA = candidatesFor('A', regime);
-    const candB = candidatesFor('B', regime);
-    const candC = candidatesFor('C', regime);
-    const savingsPicks: SavingsPicks = {
-      A: { preset: 'cons', classes: autoFillFromPreset(amounts.A, candA, 'cons') },
-      B: { preset: 'cons', classes: autoFillFromPreset(amounts.B, candB, 'cons') },
-      C: { preset: 'bal',  classes: autoFillFromPreset(amounts.C, candC, 'bal')  },
-    };
     scenarios[sid] = {
-      id: old.id,
-      name: old.name,
-      createdAt: old.createdAt,
-      updatedAt: old.updatedAt,
+      id: old.id, name: old.name, createdAt: old.createdAt, updatedAt: old.updatedAt,
       inputs: {
-        ...oi,
-        savingsPicks,
-      } as unknown as Record<string, unknown>,
+        ...old.inputs,
+        savingsPicks: {
+          A: { preset: 'cons', classes: {} },
+          B: { preset: 'cons', classes: {} },
+          C: { preset: 'bal',  classes: {} },
+        },
+      } as unknown as V3State['scenarios'][string]['inputs'],
     };
   }
   return {

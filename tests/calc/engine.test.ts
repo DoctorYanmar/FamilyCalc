@@ -1,13 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { simulate } from '../../src/lib/calc/engine';
-import type { Inputs, SavingsPicks, SavingsInstrument } from '../../src/lib/calc/types';
+import type { Inputs, SavingsInstrument } from '../../src/lib/calc/types';
 import { maturityDate, accruedValue as savingsAccrued } from '../../src/lib/calc/savings';
-
-const EMPTY_PICKS: SavingsPicks = {
-  A: { preset: 'custom', classes: {} },
-  B: { preset: 'custom', classes: {} },
-  C: { preset: 'custom', classes: {} },
-};
 
 const emptyInputs = (): Inputs => ({
   returnDate: '2026-05-01',
@@ -17,13 +11,7 @@ const emptyInputs = (): Inputs => ({
   rubPerUsd: 90,
   monthlyFamilyRub: 0,
   goals: [],
-  freeCashRub: 0,
-  horizonDate: '2026-05-03',
-  cbrKeyRatePct: 16,
-  cbrRateUpdatedAt: '2026-05-01',
-  layerOverride: {},
   includeExpectedYield: false,
-  savingsPicks: EMPTY_PICKS,
   savingsInstruments: [],
 });
 
@@ -170,34 +158,6 @@ describe('simulate — edge cases', () => {
     expect(result.balanceAtVoyage).toBe(1_000_000);
   });
 
-  it('deducts freeCashRub from balanceAtVoyage but does NOT add to totalSpent', () => {
-    const base = simulate({
-      ...emptyInputs(),
-      assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
-    }, new Date('2026-05-01'));
-    const withFreeCash = simulate({
-      ...emptyInputs(),
-      assets: { usdBank: 0, usdCash: 0, rubBank: 1_000_000 },
-      freeCashRub: 200_000,
-    }, new Date('2026-05-01'));
-    expect(withFreeCash.balanceAtVoyage).toBe(base.balanceAtVoyage - 200_000);
-    // freeCash is locked up, not spent — totalSpent is unaffected
-    expect(withFreeCash.totalSpentRub).toBe(base.totalSpentRub);
-  });
-
-  it('non-cash savings-framework fields (cbr, horizon, layerOverride, includeYield) do not affect simulate()', () => {
-    const base = simulate(emptyInputs(), new Date('2026-05-01'));
-    const withSavingsNoise = simulate({
-      ...emptyInputs(),
-      // freeCashRub deliberately stays at 0 — this test isolates the OTHER fields
-      cbrKeyRatePct: 25,
-      horizonDate: '2099-01-01',
-      layerOverride: { A: 1_000_000, B: 1_000_000, C: 1_000_000 },
-      includeExpectedYield: true,
-    }, new Date('2026-05-01'));
-    expect(withSavingsNoise.balanceAtVoyage).toBe(base.balanceAtVoyage);
-    expect(withSavingsNoise.totalSpentRub).toBe(base.totalSpentRub);
-  });
 });
 
 describe('simulate — runsOutOn and daysOfRunway', () => {
@@ -223,29 +183,6 @@ describe('simulate — runsOutOn and daysOfRunway', () => {
     const result = simulate(inputs, new Date('2026-05-01'));
     expect(result.runsOutOn).toBe('2026-05-15');
     expect(result.daysOfRunway).toBe(14);
-  });
-});
-
-describe('engine — savingsPicks invariance', () => {
-  it('simulate() ignores savingsPicks entirely', () => {
-    const inputs = emptyInputs();
-    const emptyPicks: SavingsPicks = {
-      A: { preset: 'custom', classes: {} },
-      B: { preset: 'custom', classes: {} },
-      C: { preset: 'custom', classes: {} },
-    };
-    const fullPicks: SavingsPicks = {
-      A: { preset: 'cons', classes: { savings_account: { share: 1_000_000 } } },
-      B: { preset: 'cons', classes: { term_deposit:    { share: 1_000_000 } } },
-      C: { preset: 'bal',  classes: { ofz_in:          { share: 1_000_000 } } },
-    };
-    const today = new Date(Date.UTC(2026, 4, 16));
-    const a = simulate({ ...inputs, savingsPicks: emptyPicks }, today);
-    const b = simulate({ ...inputs, savingsPicks: fullPicks  }, today);
-    expect(a.balanceAtVoyage).toBe(b.balanceAtVoyage);
-    expect(a.runsOutOn).toBe(b.runsOutOn);
-    expect(a.daysOfRunway).toBe(b.daysOfRunway);
-    expect(a.totalSpentRub).toBe(b.totalSpentRub);
   });
 });
 

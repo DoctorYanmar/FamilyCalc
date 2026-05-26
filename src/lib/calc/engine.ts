@@ -44,11 +44,9 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
   const totalDays = Math.max(0, Math.floor((voyage.getTime() - start.getTime()) / MS_PER_DAY) + 1);
 
   if (totalDays === 0) {
-    const earlyAssets: AssetMix = { ...inputs.assets };
-    if (inputs.freeCashRub > 0) drain(earlyAssets, inputs.freeCashRub, inputs.rubPerUsd);
     return {
       days: [],
-      balanceAtVoyage: totalRub(earlyAssets, inputs.rubPerUsd),
+      balanceAtVoyage: totalRub(inputs.assets, inputs.rubPerUsd),
       runsOutOn: null,
       daysOfRunway: 0,
       totalSpentRub: 0,
@@ -58,12 +56,6 @@ export function simulate(inputs: Inputs, today: Date): SimulationResult {
   }
 
   const assets: AssetMix = { ...inputs.assets };
-  // Free cash is locked up in savings instruments — not available to cover
-  // expenses or goals. Deduct it from the wallet before the daily loop.
-  // (Do NOT add to totalSpent; "set aside" is not the same as "spent".)
-  if (inputs.freeCashRub > 0) {
-    drain(assets, inputs.freeCashRub, inputs.rubPerUsd);
-  }
   let totalSpent = 0;
   const dailyExpense = inputs.monthlyFamilyRub / DAYS_PER_MONTH;
   const days: DayPoint[] = [];
