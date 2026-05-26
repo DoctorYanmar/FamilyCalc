@@ -2,138 +2,109 @@
   import { _ } from 'svelte-i18n';
   import { app, activeInputs, persistSoon } from '../../../lib/state/scenarios.svelte';
   import { currentResult } from '../../../lib/state/derived';
-  import { formatDate, formatRub } from '../../../lib/format';
-  import LayerCard from './LayerCard.svelte';
-  import TaxBanner from './TaxBanner.svelte';
-  import AsvWarning from './AsvWarning.svelte';
-  import SavingsDisclaimer from './SavingsDisclaimer.svelte';
+  import { formatRub } from '../../../lib/format';
+  import { templateById } from '../../../lib/calc/savingsTemplates';
+  import type { SavingsInstrument, SavingsTemplateId } from '../../../lib/calc/types';
+  import AddInstrumentPicker from './AddInstrumentPicker.svelte';
+  import InstrumentRow from './InstrumentRow.svelte';
 
   const inputs = $derived(activeInputs());
   const result = $derived(currentResult());
-  const hasCash = $derived(inputs.freeCashRub > 0);
 
-  function setFreeCash(e: Event) {
-    const n = Number((e.target as HTMLInputElement).value);
-    if (!Number.isNaN(n) && n >= 0) {
-      inputs.freeCashRub = n;
-      persistSoon();
-    }
+  let pickerOpen = $state(false);
+
+  function newId(): string {
+    return (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : 'id-' + Math.random().toString(36).slice(2);
   }
-  function setCbr(e: Event) {
-    const n = Number((e.target as HTMLInputElement).value);
-    if (!Number.isNaN(n) && n >= 0 && n <= 30) {
-      inputs.cbrKeyRatePct = +n.toFixed(2);
-      inputs.cbrRateUpdatedAt = new Date().toISOString().slice(0, 10);
-      persistSoon();
-    }
+
+  function todayISO(): string { return new Date().toISOString().slice(0, 10); }
+
+  function addInstrument(templateId: SavingsTemplateId) {
+    const t = templateById(templateId);
+    const inst: SavingsInstrument = {
+      id: newId(),
+      name: ($_(`savings.templates.${templateId}.name`) as unknown as string) ?? templateId,
+      templateId,
+      amountRub: 0,
+      annualRatePct: 0,
+      startDate: todayISO(),
+      termMonths: t.defaultTermMonths,
+      compounding: t.defaultCompounding,
+      enabled: true,
+    };
+    inputs.savingsInstruments = [...inputs.savingsInstruments, inst];
+    pickerOpen = false;
+    persistSoon();
   }
-  function bumpCbr(d: number) {
-    const next = +(inputs.cbrKeyRatePct + d).toFixed(2);
-    if (next >= 0 && next <= 30) {
-      inputs.cbrKeyRatePct = next;
-      inputs.cbrRateUpdatedAt = new Date().toISOString().slice(0, 10);
-      persistSoon();
-    }
+
+  function deleteInstrument(id: string) {
+    inputs.savingsInstruments = inputs.savingsInstruments.filter(i => i.id !== id);
+    persistSoon();
   }
-  function setHorizon(e: Event) { inputs.horizonDate = (e.target as HTMLInputElement).value; persistSoon(); }
-  function onYieldToggle() {
+
+  function toggleIncludeYield() {
     inputs.includeExpectedYield = !inputs.includeExpectedYield;
     persistSoon();
   }
 </script>
 
-<section class="report-card">
-  <header class="report-head">
-    <div class="report-title">
-      {$_('savings.title')}
-      <span class="badge">{$_('savings.badge')}</span>
-    </div>
-    <div class="report-meta">
-      <span>{$_('savings.freeCashShort')} <strong style="color:var(--fg);font-family:var(--mono)">{formatRub(inputs.freeCashRub, app.ui.language)}</strong></span>
-      <span class="regime">{$_(`savings.regime.${result.alloc.regime}`)}</span>
-    </div>
+<section class="card">
+  <header class="card-head">
+    <h2>{$_('savings.title')}</h2>
   </header>
 
-  <div class="report-inputs">
-    <div class="report-input">
-      <div class="lbl">{$_('savings.inputs.freeCash')}</div>
-      <span class="input-wrap">
-        <input class="input with-suffix" type="number" inputmode="decimal" min="0" step="any"
-               value={inputs.freeCashRub === 0 ? '' : inputs.freeCashRub}
-               placeholder="0"
-               oninput={setFreeCash} />
-        <span class="suffix">₽</span>
-      </span>
+  {#if inputs.savingsInstruments.length === 0}
+    <div class="zero">
+      <p class="zero-body">{$_('savings.zeroState.body')}</p>
+      <button type="button" class="btn primary" onclick={() => (pickerOpen = true)}>{$_('savings.zeroState.add')}</button>
+      {#if pickerOpen}
+        <div class="picker-wrap">
+          <AddInstrumentPicker onAdd={addInstrument} onCancel={() => (pickerOpen = false)} />
+        </div>
+      {/if}
     </div>
-    <div class="report-input">
-      <div class="lbl">
-        {$_('savings.inputs.cbrRate')}
-        <span class="hint" title={$_('savings.inputs.cbrTooltip')}>
-          ⓘ {$_('savings.inputs.cbrUpdated')} {formatDate(inputs.cbrRateUpdatedAt, app.ui.language)}
-        </span>
-      </div>
-      <div class="stepper" role="group" aria-label={$_('savings.inputs.cbrRate')}>
-        <button type="button" onclick={() => bumpCbr(-0.25)} aria-label="-0.25">−</button>
-        <input class="stepper-val" type="number" inputmode="decimal" min="0" max="30" step="0.25"
-               value={inputs.cbrKeyRatePct}
-               oninput={setCbr} />
-        <button type="button" onclick={() => bumpCbr(0.25)} aria-label="+0.25">+</button>
-      </div>
-    </div>
-    <div class="report-input">
-      <div class="lbl">{$_('savings.inputs.horizon')}</div>
-      <input class="input date" type="date" value={inputs.horizonDate} oninput={setHorizon} />
-    </div>
-  </div>
-
-  {#if !hasCash}
-    <div class="layer-empty">{$_('savings.emptyState')}</div>
   {:else}
-    <div class="report-layers">
-      <LayerCard layer="A" />
-      <LayerCard layer="B" />
-      <LayerCard layer="C" />
+    <div class="inst-list">
+      {#each inputs.savingsInstruments as instrument (instrument.id)}
+        <InstrumentRow {instrument} voyageDate={inputs.voyageDate} onDelete={() => deleteInstrument(instrument.id)} />
+      {/each}
     </div>
+
+    {#if pickerOpen}
+      <div class="picker-wrap">
+        <AddInstrumentPicker onAdd={addInstrument} onCancel={() => (pickerOpen = false)} />
+      </div>
+    {:else}
+      <button type="button" class="btn" onclick={() => (pickerOpen = true)}>{$_('savings.zeroState.add')}</button>
+    {/if}
+
+    <footer class="sav-foot">
+      <span class="toggle-label" role="switch" tabindex="0"
+            aria-checked={inputs.includeExpectedYield}
+            aria-label={$_('savings.footer.includeYield')}
+            onclick={toggleIncludeYield}
+            onkeydown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleIncludeYield(); } }}>
+        <span class="toggle-cb" class:on={inputs.includeExpectedYield} aria-hidden="true"></span>
+        <span>{$_('savings.footer.includeYield')}</span>
+      </span>
+      <span class="totals">
+        <span>{$_('savings.totals.parked', { values: { amount: formatRub(result.sim.totalPrincipalRub, app.ui.language) } })}</span>
+        <span class="dot">·</span>
+        <span class="accent">{$_('savings.totals.accrued', { values: { amount: formatRub(result.sim.totalAccruedInterestRub, app.ui.language) } })}</span>
+      </span>
+    </footer>
   {/if}
-
-  <TaxBanner />
-  <AsvWarning />
-
-  <footer class="report-foot">
-    <span
-      class="toggle-label"
-      role="switch"
-      aria-checked={inputs.includeExpectedYield}
-      tabindex="0"
-      onclick={onYieldToggle}
-      onkeydown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); onYieldToggle(); } }}
-      aria-label={$_('savings.inputs.includeYield')}
-    >
-      <span class="toggle-cb" class:on={inputs.includeExpectedYield} aria-hidden="true"></span>
-      <span>{$_('savings.inputs.includeYield')}</span>
-    </span>
-    <span class="number" style="font-family:var(--mono);color:var(--fg-3)">
-      {$_('savings.midYield')} · <strong style="color:var(--accent);font-weight:600">+ {formatRub(result.expectedYieldMid, app.ui.language)}</strong>
-    </span>
-  </footer>
-
-  <SavingsDisclaimer />
 </section>
 
 <style>
-  /* .stepper-val is a span in global.css; here it's an editable <input>
-     so we reset native chrome and re-apply the visual rhythm. The stepper
-     widget itself enforces the size — no per-input width hack. */
-  .stepper > .stepper-val {
-    all: unset;
-    border-left: 1px solid var(--border);
-    border-right: 1px solid var(--border);
-    padding: 8px 14px;
-    font-family: var(--mono);
-    font-size: var(--t-med);
-    color: var(--fg);
-    font-variant-numeric: tabular-nums;
-    flex: 1;
-    text-align: center;
-  }
+  .zero { display: grid; gap: var(--gap-3); }
+  .zero-body { color: var(--fg-2); line-height: 1.5; margin: 0; }
+  .inst-list { display: grid; gap: var(--gap-3); margin-bottom: var(--gap-3); }
+  .picker-wrap { margin: var(--gap-3) 0; }
+  .sav-foot { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--gap-3); margin-top: var(--gap-4); padding-top: var(--gap-3); border-top: 1px solid var(--border-soft); }
+  .totals { font-family: var(--mono); color: var(--fg-2); display: inline-flex; gap: var(--gap-2); align-items: center; }
+  .totals .accent { color: var(--accent); font-weight: 600; }
+  .totals .dot { color: var(--fg-3); }
 </style>
