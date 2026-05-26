@@ -58,6 +58,7 @@
 <style>
   .field > :global(.select) {
     width: 180px;
+    text-align: right;
   }
   .stepper > .stepper-val {
     all: unset;
