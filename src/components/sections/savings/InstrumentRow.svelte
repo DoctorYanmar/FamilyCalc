@@ -64,9 +64,9 @@
     </span>
   </header>
 
-  <div class="inst-grid">
+  <div class="inst-fields">
     <label class="field">
-      <span class="label">{$_('savings.instrument.amount')}</span>
+      <span class="field-key">{$_('savings.instrument.amount')}</span>
       <span class="input-wrap">
         <input class="input with-suffix" type="number" inputmode="decimal" min="0" step="any"
                value={instrument.amountRub === 0 ? '' : instrument.amountRub}
@@ -76,7 +76,7 @@
       </span>
     </label>
     <label class="field">
-      <span class="label">{$_('savings.instrument.rate')}</span>
+      <span class="field-key">{$_('savings.instrument.rate')}</span>
       <span class="input-wrap">
         <input class="input with-suffix" type="number" inputmode="decimal" min="0" max="50" step="0.25"
                value={instrument.annualRatePct}
@@ -85,12 +85,12 @@
       </span>
     </label>
     <label class="field">
-      <span class="label">{$_('savings.instrument.startDate')}</span>
+      <span class="field-key">{$_('savings.instrument.startDate')}</span>
       <input class="input date" type="date" value={instrument.startDate} max={todayISO}
              oninput={(e) => setStart((e.target as HTMLInputElement).value)} />
     </label>
     <label class="field">
-      <span class="label">{$_('savings.instrument.term')}</span>
+      <span class="field-key">{$_('savings.instrument.term')}</span>
       <select class="input" disabled={template.termFixed} value={termValueAttr} onchange={(e) => setTerm((e.target as HTMLSelectElement).value)}>
         <option value="open">{$_('savings.instrument.termOpen')}</option>
         {#each termOptions as m}
@@ -99,7 +99,7 @@
       </select>
     </label>
     <label class="field">
-      <span class="label">{$_('savings.instrument.compounding')}</span>
+      <span class="field-key">{$_('savings.instrument.compounding')}</span>
       <select class="input" value={instrument.compounding} onchange={(e) => setCompounding((e.target as HTMLSelectElement).value)}>
         <option value="daily">{$_('savings.instrument.compoundingDaily')}</option>
         <option value="monthly">{$_('savings.instrument.compoundingMonthly')}</option>
@@ -123,19 +123,16 @@
 </article>
 
 <style>
-  .inst-row { border: 1px solid var(--border); border-radius: 8px; padding: var(--gap-4); background: var(--surface); display: grid; gap: var(--gap-3); }
+  .inst-row { border: 1px solid var(--border); border-radius: 8px; padding: var(--gap-4); background: var(--surface); display: grid; gap: 0; }
   .inst-row.disabled { opacity: 0.55; }
-  .inst-head { display: flex; align-items: center; gap: var(--gap-3); justify-content: space-between; }
-  .inst-name { flex: 1; min-width: 0; }
-  .inst-actions { display: inline-flex; gap: var(--gap-2); align-items: center; }
-  .inst-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--gap-3); }
-  .inst-status { display: flex; flex-wrap: wrap; gap: var(--gap-2); }
+  .inst-head { display: flex; align-items: center; gap: var(--gap-3); justify-content: space-between; padding-bottom: var(--gap-3); border-bottom: 1px solid var(--border); }
+  .inst-name { flex: 1; min-width: 0; font-weight: 600; text-align: left; }
+  .inst-actions { display: inline-flex; gap: var(--gap-2); align-items: center; flex-shrink: 0; }
+  .inst-fields { display: grid; }
+  .inst-status { display: flex; flex-wrap: wrap; gap: var(--gap-2); padding-top: var(--gap-3); border-top: 1px solid var(--border); }
   .chip { padding: 2px 8px; border-radius: 999px; font-size: var(--t-sm); font-family: var(--mono); border: 1px solid var(--border-soft); }
   .chip.accrued { color: var(--accent); border-color: var(--accent); }
   .chip.gray { color: var(--fg-3); }
   .chip.green { color: var(--accent); border-color: var(--accent); }
   .chip.amber { color: var(--warn); border-color: var(--warn); }
-  @media (max-width: 640px) {
-    .inst-grid { grid-template-columns: 1fr; }
-  }
 </style>
