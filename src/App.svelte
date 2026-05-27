@@ -82,7 +82,10 @@
   </div>
 
   <div class="app-footer">
-    <span>VACATION PLANNER</span>
+    <a class="footer-site" href="https://simplemarinesoftware.com" target="_blank" rel="noopener">
+      <span class="footer-dot"></span>
+      simplemarinesoftware.com
+    </a>
     <span>{clock}</span>
   </div>
 

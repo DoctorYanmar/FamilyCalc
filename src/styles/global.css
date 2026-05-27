@@ -759,12 +759,31 @@ input[type='number'] {
   border-top: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
+  align-items: center;
   color: var(--fg-4);
   font-size: var(--t-mini);
   font-family: var(--mono);
   letter-spacing: 0.04em;
   gap: var(--gap-3);
   flex-wrap: wrap;
+}
+.footer-site {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fg-4);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-site:hover {
+  color: var(--primary);
+}
+.footer-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
 }
 
 /* ────────── Number / color helpers ────────── */
